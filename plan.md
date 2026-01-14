@@ -21,13 +21,13 @@
 - [x] Seed membership plans, admin, seller, demo products, and news posts.
 
 ### Step 2 — Auth sessions + RBAC (MVP Gate 2)
-- [ ] Implement DB-backed sessions and HTTP-only cookies.
-- [ ] Add RBAC middleware for guest/member/seller/admin.
+- [ ] Implement DB-backed sessions and HTTP-only cookies. (helpers + /api/me + logout done; wiring on checkout success pending)
+- [ ] Add RBAC middleware for guest/member/seller/admin. (guard helpers added; enforcement pending)
 
 ### Step 3 — Membership checkout (MVP Gate 3)
-- [ ] Implement Stripe/PayPal membership checkout start.
-- [ ] Implement success verification that creates user+membership+session.
-- [ ] Add webhook idempotency handling.
+- [ ] Implement Stripe/PayPal membership checkout start. (routes implemented, env/config pending)
+- [ ] Implement success verification that creates user+membership+session. (stripe/paypal success handlers added)
+- [ ] Add webhook idempotency handling. (stripe/paypal webhooks storing events)
 
 ### Step 4 — Points ledger + renewals (MVP Gate 4)
 - [ ] Implement points ledger and balance calculation.
@@ -49,3 +49,5 @@
 - 2025-02-14: Migrated UI scaffold to Next.js 14 App Router with Tailwind/DaisyUI and Next scripts; shadcn/ui pending.
 - 2026-01-14: Added shadcn/ui scaffold and Prisma setup stubs (schema/seed) with scripts.
 - 2026-01-14: Implemented Prisma schema and seed data for MVP Gate 1.
+- 2026-01-14: Added session + RBAC helper utilities and `/api/me` + logout route.
+- 2026-01-14: Added membership checkout routes, success handlers, and webhook event storage.
