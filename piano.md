@@ -31,7 +31,7 @@ This document is the single source of truth for Codex. Codex must continuously r
 
 ### Tech stack (required)
 - **DB: PostgreSQL** (single source of truth)
-- Web: **Next.js 14 App Router**, **TypeScript**, **Tailwind** , **shadcn/ui**
+- Web: **Next.js 14 App Router**, **TypeScript**, **Tailwind + Daisyui** , **shadcn/ui**
 - ORM: **Prisma** targeting PostgreSQL
 - Payments:
   - Membership: **Stripe Billing** (cards) + **PayPal Subscriptions**
