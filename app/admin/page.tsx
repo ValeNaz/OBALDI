@@ -1,96 +1,20 @@
-"use client";
+import { redirect } from "next/navigation";
+import type { UserRole } from "@prisma/client";
+import { AuthError, requireRole, requireSession } from "@/src/core/auth/guard";
+import AdminDashboard from "./AdminDashboard";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useUser } from "../../context/UserContext";
+const allowedRoles: UserRole[] = ["ADMIN"];
 
-const AdminDashboard = () => {
-  const { user } = useUser();
-  const router = useRouter();
-  const [pending, setPending] = useState([
-    { id: "p1", name: "Software Analisi X", seller: "Marco Rossi", price: 120 },
-    { id: "p2", name: "USB Vault 2048", seller: "TechSecure Srl", price: 35 }
-  ]);
-
-  useEffect(() => {
-    if (user && user.role !== "ADMIN") {
-      router.push("/");
+export default async function AdminPage() {
+  try {
+    const session = await requireSession();
+    requireRole(session.user.role, allowedRoles);
+  } catch (error) {
+    if (error instanceof AuthError) {
+      redirect("/");
     }
-  }, [router, user]);
-
-  if (!user || user.role !== "ADMIN") {
-    return null;
+    throw error;
   }
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 pt-32 pb-12">
-      <div className="flex justify-between items-center mb-12">
-        <h1 className="text-3xl font-bold text-[#0b224e]">Console Amministrazione</h1>
-        <div className="bg-red-50 text-red-600 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest border border-red-100">
-          Accesso Protetto
-        </div>
-      </div>
-
-      <div className="grid lg:grid-cols-4 gap-8">
-        <div className="lg:col-span-1 space-y-4">
-          <nav className="space-y-1">
-            <button className="w-full text-left p-3 rounded bg-slate-100 font-bold text-slate-900">
-              Prodotti in coda ({pending.length})
-            </button>
-            <button className="w-full text-left p-3 rounded hover:bg-slate-50 font-medium text-slate-500">
-              Gestione News
-            </button>
-            <button className="w-full text-left p-3 rounded hover:bg-slate-50 font-medium text-slate-500">
-              Audit Log
-            </button>
-            <button className="w-full text-left p-3 rounded hover:bg-slate-50 font-medium text-slate-500">
-              Gestione Utenti
-            </button>
-          </nav>
-        </div>
-
-        <div className="lg:col-span-3">
-          <div className="bg-white border rounded-xl overflow-hidden">
-            <table className="w-full text-left border-collapse">
-              <thead className="bg-slate-50 text-slate-500 text-xs uppercase tracking-widest font-bold">
-                <tr>
-                  <th className="px-6 py-4">Prodotto</th>
-                  <th className="px-6 py-4">Seller</th>
-                  <th className="px-6 py-4">Prezzo</th>
-                  <th className="px-6 py-4 text-right">Azioni</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y text-sm">
-                {pending.map((product) => (
-                  <tr key={product.id}>
-                    <td className="px-6 py-4 font-bold">{product.name}</td>
-                    <td className="px-6 py-4">{product.seller}</td>
-                    <td className="px-6 py-4">€{product.price}</td>
-                    <td className="px-6 py-4 text-right space-x-2">
-                      <button
-                        className="bg-green-600 text-white px-3 py-1.5 rounded text-xs font-bold"
-                        onClick={() => setPending((prev) => prev.filter((item) => item.id !== product.id))}
-                      >
-                        Approva
-                      </button>
-                      <button className="bg-[#a41f2e] text-white px-3 py-1.5 rounded text-xs font-bold">Rigetta</button>
-                    </td>
-                  </tr>
-                ))}
-                {pending.length === 0 && (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center text-slate-400">
-                      Nessun prodotto in attesa di approvazione.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default AdminDashboard;
+  return <AdminDashboard />;
+}

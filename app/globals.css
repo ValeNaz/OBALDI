@@ -25,6 +25,12 @@
     --destructive-foreground: 210 40% 98%;
     --ring: 215 20.2% 65.1%;
     --radius: 0.5rem;
+    --glass-bg: rgba(255, 255, 255, 0.72);
+    --glass-border: rgba(148, 163, 184, 0.25);
+    --glass-shadow: 0 20px 60px rgba(11, 34, 78, 0.12);
+    --glass-blur: 18px;
+    --glow-navy: rgba(11, 34, 78, 0.18);
+    --glow-red: rgba(164, 31, 46, 0.14);
   }
 
   .dark {
@@ -56,6 +62,101 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-body antialiased;
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(11, 34, 78, 0.08), transparent 55%),
+      radial-gradient(circle at 80% 10%, rgba(164, 31, 46, 0.08), transparent 50%),
+      linear-gradient(180deg, #f8fafc 0%, #eef2f7 45%, #f8fafc 100%);
+    background-attachment: fixed;
+  }
+}
+
+@layer components {
+  .page-pad {
+    @apply px-4 md:px-6 lg:px-8;
+  }
+
+  .section-pad {
+    @apply py-16 md:py-24;
+  }
+
+  .card-pad {
+    @apply p-6 md:p-8;
+  }
+
+  .container-max {
+    @apply max-w-7xl mx-auto;
+  }
+
+  .glass-surface {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    backdrop-filter: blur(var(--glass-blur));
+  }
+
+  .glass-card {
+    @apply glass-surface rounded-3xl;
+  }
+
+  .glass-panel {
+    @apply glass-surface rounded-2xl;
+  }
+
+  .glass-input {
+    @apply bg-white/70 border border-white/60 rounded-xl px-4 py-3 text-sm text-slate-700 outline-none transition;
+    box-shadow: 0 10px 30px rgba(11, 34, 78, 0.06);
+  }
+
+  .glass-input:focus {
+    border-color: rgba(11, 34, 78, 0.4);
+    box-shadow: 0 0 0 2px rgba(11, 34, 78, 0.12);
+  }
+
+  .soft-glow {
+    box-shadow: 0 18px 50px var(--glow-navy);
+  }
+
+  .soft-glow-red {
+    box-shadow: 0 18px 50px var(--glow-red);
+  }
+
+  .glass-hover {
+    @apply transition duration-300 ease-out;
+  }
+
+  .glass-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 28px 80px rgba(11, 34, 78, 0.16);
+  }
+}
+
+@layer utilities {
+  .animate-fade-up {
+    animation: fadeUp 0.35s ease-out both;
+  }
+
+  .animate-fade-in-soft {
+    animation: fadeInSoft 0.3s ease-out both;
+  }
+
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeInSoft {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
 }

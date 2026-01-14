@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { hashPassword } from "../src/core/auth/passwords";
 
 const prisma = new PrismaClient();
 
@@ -49,23 +50,48 @@ async function main() {
     }
   });
 
+  const adminEmail = process.env.ADMIN_EMAIL ?? "admin@obaldi.local";
+  const sellerEmail = process.env.SELLER_EMAIL ?? "seller@obaldi.local";
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  const sellerPassword = process.env.SELLER_PASSWORD;
+
+  const adminPasswordHash = adminPassword ? await hashPassword(adminPassword) : null;
+  const sellerPasswordHash = sellerPassword ? await hashPassword(sellerPassword) : null;
+
+  if (!adminPasswordHash) {
+    console.warn("ADMIN_PASSWORD not set. Admin will not be able to login.");
+  }
+  if (!sellerPasswordHash) {
+    console.warn("SELLER_PASSWORD not set. Seller will not be able to login.");
+  }
+
   const admin = await prisma.user.upsert({
-    where: { email: "admin@obaldi.local" },
-    update: { role: "ADMIN", emailVerifiedAt: new Date() },
-    create: {
-      email: "admin@obaldi.local",
+    where: { email: adminEmail },
+    update: {
       role: "ADMIN",
-      emailVerifiedAt: new Date()
+      emailVerifiedAt: new Date(),
+      passwordHash: adminPasswordHash ?? undefined
+    },
+    create: {
+      email: adminEmail,
+      role: "ADMIN",
+      emailVerifiedAt: new Date(),
+      passwordHash: adminPasswordHash ?? undefined
     }
   });
 
   const seller = await prisma.user.upsert({
-    where: { email: "seller@obaldi.local" },
-    update: { role: "SELLER", emailVerifiedAt: new Date() },
-    create: {
-      email: "seller@obaldi.local",
+    where: { email: sellerEmail },
+    update: {
       role: "SELLER",
-      emailVerifiedAt: new Date()
+      emailVerifiedAt: new Date(),
+      passwordHash: sellerPasswordHash ?? undefined
+    },
+    create: {
+      email: sellerEmail,
+      role: "SELLER",
+      emailVerifiedAt: new Date(),
+      passwordHash: sellerPasswordHash ?? undefined
     }
   });
 

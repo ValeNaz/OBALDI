@@ -1,5 +1,6 @@
 import { Provider } from "@prisma/client";
 import { prisma } from "@/src/core/db";
+import { calculateRenewalPoints } from "@/src/core/membership/points";
 
 export const finalizeMembershipCheckout = async (params: {
   checkoutSessionId: string;
@@ -56,6 +57,39 @@ export const finalizeMembershipCheckout = async (params: {
         autoRenew: true,
         provider: params.provider,
         providerSubId: params.providerSubId
+      }
+    });
+
+    const plan = await tx.membershipPlan.findUnique({
+      where: { id: params.planId }
+    });
+
+    if (plan) {
+      const pointsAwarded = calculateRenewalPoints(plan);
+      if (pointsAwarded > 0) {
+        await tx.pointsLedger.create({
+          data: {
+            userId: user.id,
+            delta: pointsAwarded,
+            reason: "RENEWAL",
+            refType: "MEMBERSHIP",
+            refId: membership.id
+          }
+        });
+      }
+    }
+
+    await tx.auditLog.create({
+      data: {
+        actorUserId: user.id,
+        action: "membership.created",
+        entity: "membership",
+        entityId: membership.id,
+        metadataJson: {
+          provider: params.provider,
+          providerSubId: params.providerSubId,
+          planId: params.planId
+        }
       }
     });
 

@@ -1,38 +1,53 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useUser } from "../context/UserContext";
 
 const Header = () => {
-  const { user, points } = useUser();
+  const { user, points, logout } = useUser();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await logout();
+    router.push("/");
+  };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 px-4 pt-4">
-      <div className="max-w-7xl mx-auto bg-white/80 backdrop-blur-xl rounded-3xl shadow-lg shadow-slate-900/5 border border-slate-200/50">
+    <header className="fixed top-0 left-0 right-0 z-50 page-pad pt-4">
+      <div className="container-max glass-card glass-hover">
         <div className="px-6 h-20 flex items-center justify-between">
           <nav className="flex items-center space-x-8">
             <Link
               href="/"
-              className="text-2xl font-bold text-[#0b224e] hover:opacity-80 transition-opacity"
+              className="flex items-center hover:opacity-80 transition-opacity"
+              aria-label="Obaldi"
             >
-              Obaldi
+              <Image
+                src="/media/logo_Obaldi.png"
+                alt="Obaldi"
+                width={160}
+                height={40}
+                className="h-10 w-auto"
+              />
             </Link>
             <div className="hidden md:flex items-center space-x-2">
               <Link
                 href="/membership"
-                className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-[#0b224e] rounded-full hover:bg-slate-50 transition-all"
+                className="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-[#0b224e] rounded-full hover:bg-white/60 transition-all"
               >
                 Entra in Obaldi
               </Link>
               <Link
                 href="/about"
-                className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-[#0b224e] rounded-full hover:bg-slate-50 transition-all"
+                className="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-[#0b224e] rounded-full hover:bg-white/60 transition-all"
               >
                 Chi siamo
               </Link>
               <Link
                 href="/marketplace"
-                className="relative group px-6 py-2.5 bg-gradient-to-r from-[#0b224e] to-[#1a3a6e] text-white text-sm font-bold rounded-full overflow-hidden transition-all hover:scale-105 hover:shadow-lg hover:shadow-[#0b224e]/30 ml-2"
+                className="relative group px-6 py-2.5 bg-[#0b224e] text-white text-sm font-bold rounded-full overflow-hidden transition-all hover:scale-[1.03] hover:shadow-glow-soft ml-2"
               >
                 <span className="relative z-10 flex items-center gap-2">
                   Marketplace
@@ -46,22 +61,29 @@ const Header = () => {
             {user ? (
               <div className="flex items-center space-x-3">
                 {user.isPremium && (
-                  <div className="flex items-center bg-gradient-to-r from-amber-50 to-yellow-50 px-4 py-2 rounded-full border border-amber-200/50 text-xs font-bold text-amber-900 shadow-sm">
+                  <div className="flex items-center bg-white/70 px-4 py-2 rounded-full border border-amber-200/60 text-xs font-bold text-amber-900 shadow-sm">
                     <span className="mr-2">🪙</span> {points} Punti
                   </div>
                 )}
                 <span className="text-sm text-slate-600 hidden lg:block">{user.email}</span>
                 <Link
                   href={user.role === "ADMIN" ? "/admin" : user.role === "SELLER" ? "/seller" : "/profile"}
-                  className="px-4 py-2 text-xs uppercase font-bold text-white bg-[#a41f2e] rounded-full hover:bg-[#8a1a26] transition-colors"
+                  className="px-4 py-2 text-xs uppercase font-bold text-white bg-[#a41f2e] rounded-full hover:bg-[#8a1a26] transition-colors shadow-sm"
                 >
                   Area Riservata
                 </Link>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="px-4 py-2 text-xs uppercase font-bold text-slate-600 bg-white/70 rounded-full hover:bg-white transition-colors shadow-sm"
+                >
+                  Esci
+                </button>
               </div>
             ) : (
               <Link
                 href="/login"
-                className="px-6 py-2.5 text-sm font-semibold rounded-full bg-[#0b224e] text-white hover:bg-[#1a3a6e] transition-all hover:shadow-lg hover:shadow-[#0b224e]/30"
+                className="px-6 py-2.5 text-sm font-semibold rounded-full bg-[#0b224e] text-white hover:bg-[#1a3a6e] transition-all hover:shadow-glow-soft"
               >
                 Accedi
               </Link>

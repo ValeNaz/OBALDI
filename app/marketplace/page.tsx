@@ -1,91 +1,92 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useUser } from "../../context/UserContext";
-import { Product } from "../../types";
 
-const MOCK_PRODUCTS: Product[] = [
-  {
-    id: "1",
-    name: "Kit Protezione Web V1",
-    description: "Analizzatore hardware per pacchetti di rete.",
-    price: 49.0,
-    imageUrl: "https://picsum.photos/seed/tech1/400/300",
-    status: "APPROVED",
-    sellerId: "s1",
-    isPointsEligible: true,
-    pointsPrice: 20
-  },
-  {
-    id: "2",
-    name: "Zaino Anti-Theft Pro",
-    description: "Sicurezza passiva per i tuoi dispositivi.",
-    price: 89.0,
-    imageUrl: "https://picsum.photos/seed/tech2/400/300",
-    status: "APPROVED",
-    sellerId: "s1",
-    isPointsEligible: false
-  },
-  {
-    id: "3",
-    name: "Webcam Privacy Guard",
-    description: "Otturatore fisico e LED di stato reale.",
-    price: 25.0,
-    imageUrl: "https://picsum.photos/seed/tech3/400/300",
-    status: "APPROVED",
-    sellerId: "s2",
-    isPointsEligible: true,
-    pointsPrice: 10
-  },
-  {
-    id: "4",
-    name: "Manuale Tutela 2024",
-    description: "Guida cartacea alle truffe bancarie.",
-    price: 15.0,
-    imageUrl: "https://picsum.photos/seed/tech4/400/300",
-    status: "APPROVED",
-    sellerId: "s2",
-    isPointsEligible: false
-  }
-];
+type ApiProduct = {
+  id: string;
+  title: string;
+  description: string;
+  priceCents: number;
+  currency: string;
+  pointsEligible: boolean;
+  pointsPrice: number | null;
+};
 
 const Marketplace = () => {
   const { user } = useUser();
+  const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
+  const [products, setProducts] = useState<ApiProduct[]>([]);
 
-  const filtered = MOCK_PRODUCTS.filter((product) => product.name.toLowerCase().includes(search.toLowerCase()));
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const load = async () => {
+      try {
+        const response = await fetch("/api/products", {
+          signal: controller.signal
+        });
+        if (!response.ok) return;
+        const data = await response.json();
+        setProducts(data.products ?? []);
+      } catch {
+        // Ignore fetch errors for now; API may not be ready in dev.
+      }
+    };
+
+    load();
+    return () => controller.abort();
+  }, []);
+
+  const filtered = products.filter((product) =>
+    product.title.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 pt-32 pb-12">
+    <div className="container-max page-pad pt-28 md:pt-32 pb-16">
+      {searchParams?.get("order_success") === "1" && (
+        <div className="mb-8 text-sm text-green-700 font-semibold bg-green-50 border border-green-100 rounded-xl px-4 py-3">
+          Pagamento completato! Ti aggiorneremo sullo stato dell&apos;ordine.
+        </div>
+      )}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
         <div>
-          <h1 className="text-4xl font-bold text-[#0b224e]">Marketplace</h1>
-          <p className="text-slate-500 mt-1">Prodotti verificati e pronti all'uso.</p>
+          <h1 className="text-4xl md:text-5xl font-display font-bold text-[#0b224e]">Marketplace</h1>
+          <p className="text-slate-500 mt-2">Prodotti verificati e pronti all&apos;uso.</p>
         </div>
-        <div className="relative w-full md:w-96">
+        <div className="relative w-full md:w-96 glass-panel px-4 py-2">
           <input
             type="text"
             placeholder="Cerca prodotto..."
-            className="w-full pl-4 pr-10 py-3 border rounded-lg focus:ring-2 focus:ring-[#0b224e] outline-none"
+            className="w-full bg-transparent pr-10 py-2 text-sm text-slate-700 outline-none"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
-          <span className="absolute right-4 top-3.5 text-slate-400">🔍</span>
+          <span className="absolute right-4 top-3 text-slate-400">🔍</span>
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
         {filtered.map((product) => (
-          <div key={product.id} className="bg-white border rounded-xl overflow-hidden group hover:shadow-md transition">
+          <div key={product.id} className="glass-card overflow-hidden group glass-hover">
             <Link href={`/product/${product.id}`} className="block">
-              <img src={product.imageUrl} alt={product.name} className="w-full h-48 object-cover" />
+              <Image
+                src="https://picsum.photos/seed/obaldi/400/300"
+                alt={product.title}
+                width={400}
+                height={300}
+                className="w-full h-48 object-cover"
+              />
               <div className="p-6">
-                <h3 className="font-bold text-lg mb-2 group-hover:text-[#a41f2e] transition">{product.name}</h3>
+                <h3 className="font-bold text-lg mb-2 group-hover:text-[#a41f2e] transition">{product.title}</h3>
                 <p className="text-sm text-slate-500 mb-4 line-clamp-2">{product.description}</p>
                 <div className="flex justify-between items-center mt-auto">
-                  <div className="font-bold text-xl text-[#0b224e]">€{product.price.toFixed(2)}</div>
-                  {product.isPointsEligible && (
+                  <div className="font-bold text-xl text-[#0b224e]">€{(product.priceCents / 100).toFixed(2)}</div>
+                  {product.pointsEligible && (
                     <div className="text-xs font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded">
                       🪙 {product.pointsPrice} Punti
                     </div>
@@ -98,13 +99,13 @@ const Marketplace = () => {
             </Link>
             <div className="px-6 pb-6 mt-auto">
               {user?.isMember ? (
-                <button className="w-full py-2 bg-[#0b224e] text-white text-sm font-bold rounded hover:opacity-90">
+                <button className="w-full py-2 bg-[#0b224e] text-white text-sm font-bold rounded-full hover:opacity-90">
                   Aggiungi al carrello
                 </button>
               ) : (
                 <Link
                   href="/membership"
-                  className="block text-center w-full py-2 bg-slate-100 text-[#0b224e] text-sm font-bold rounded hover:bg-slate-200"
+                  className="block text-center w-full py-2 bg-white/70 text-[#0b224e] text-sm font-bold rounded-full hover:bg-white"
                 >
                   Diventa membro per acquistare
                 </Link>
@@ -112,6 +113,11 @@ const Marketplace = () => {
             </div>
           </div>
         ))}
+        {filtered.length === 0 && (
+          <div className="col-span-full bg-slate-50 border border-slate-200 rounded-2xl p-10 text-center text-slate-500">
+            Nessun prodotto approvato trovato.
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getSessionByToken, SESSION_COOKIE_NAME } from "@/src/core/auth/session";
+import { getPointsBalance } from "@/src/core/points/balance";
 
 export async function GET() {
   const token = cookies().get(SESSION_COOKIE_NAME)?.value;
@@ -29,12 +30,15 @@ export async function GET() {
       }
     : null;
 
+  const pointsBalance = await getPointsBalance(user.id);
+
   return NextResponse.json({
     user: {
       id: user.id,
       email: user.email,
       role: user.role
     },
-    membership
+    membership,
+    pointsBalance
   });
 }

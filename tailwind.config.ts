@@ -46,10 +46,19 @@ const config: Config = {
           foreground: "hsl(var(--card-foreground))"
         }
       },
+      fontFamily: {
+        display: ["var(--font-display)", "sans-serif"],
+        body: ["var(--font-body)", "sans-serif"]
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)"
+      },
+      boxShadow: {
+        "glow-soft": "0 20px 60px rgba(11, 34, 78, 0.14)",
+        "glow-red": "0 18px 50px rgba(164, 31, 46, 0.18)",
+        "glow-card": "0 28px 80px rgba(11, 34, 78, 0.16)"
       },
       keyframes: {
         "accordion-down": {
