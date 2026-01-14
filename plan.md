@@ -1,9 +1,9 @@
 # Obaldi execution plan
 
 ## Project baseline (current)
-- Stack: Next.js 14 App Router + React + Tailwind + DaisyUI, no backend, no database.
+- Stack: Next.js 14 App Router + React + Tailwind + DaisyUI + shadcn/ui scaffold, no backend.
 - UI shell present (Home, Membership, About, Marketplace, Admin, Seller, Login pages).
-- No Prisma schema, PostgreSQL integration, or shadcn/ui components.
+- Prisma schema + seed present, no DB integration or migrations yet.
 
 ## Tracking method
 - Use this file as the single plan and progress tracker.
@@ -12,13 +12,13 @@
 ## Plan (derived from piano.md)
 
 ### Step 0 — Repository baseline and scaffolding
-- [ ] Align stack to required Next.js 14 App Router + TypeScript + Tailwind + DaisyUI + shadcn/ui.
-- [ ] Add Prisma + PostgreSQL setup (schema, migrations, seed).
+- [x] Align stack to required Next.js 14 App Router + TypeScript + Tailwind + DaisyUI + shadcn/ui.
+- [ ] Add Prisma + PostgreSQL setup (schema, migrations, seed). (schema/seed done; migrations pending)
 - [x] Add lint/test/build scripts and CI readiness.
 
 ### Step 1 — Data model and seed (MVP Gate 1)
-- [ ] Implement Prisma schema for required models.
-- [ ] Seed membership plans, admin, seller, demo products, and news posts.
+- [x] Implement Prisma schema for required models.
+- [x] Seed membership plans, admin, seller, demo products, and news posts.
 
 ### Step 2 — Auth sessions + RBAC (MVP Gate 2)
 - [ ] Implement DB-backed sessions and HTTP-only cookies.
@@ -47,3 +47,5 @@
 ## Progress log
 - 2025-02-14: Created plan.md and baseline analysis.
 - 2025-02-14: Migrated UI scaffold to Next.js 14 App Router with Tailwind/DaisyUI and Next scripts; shadcn/ui pending.
+- 2026-01-14: Added shadcn/ui scaffold and Prisma setup stubs (schema/seed) with scripts.
+- 2026-01-14: Implemented Prisma schema and seed data for MVP Gate 1.

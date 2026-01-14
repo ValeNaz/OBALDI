@@ -1,0 +1,369 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  MEMBER
+  SELLER
+  ADMIN
+}
+
+enum MembershipPlanCode {
+  ACCESSO
+  TUTELA
+}
+
+enum PointsPolicyType {
+  NONE
+  FIXED_PER_RENEWAL
+  CONVERT_FEE_TO_POINTS
+}
+
+enum MembershipStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  EXPIRED
+}
+
+enum Provider {
+  STRIPE
+  PAYPAL
+}
+
+enum CheckoutSessionKind {
+  MEMBERSHIP
+}
+
+enum CheckoutSessionStatus {
+  CREATED
+  APPROVED
+  PAID
+  FAILED
+  EXPIRED
+}
+
+enum PointsLedgerReason {
+  RENEWAL
+  SPEND
+  ADJUSTMENT
+  REFUND
+}
+
+enum PointsLedgerRefType {
+  MEMBERSHIP
+  ORDER
+  ADMIN
+}
+
+enum ProductStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ProductMediaType {
+  IMAGE
+  VIDEO
+}
+
+enum ChangeRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum OrderStatus {
+  CREATED
+  PAID
+  CANCELED
+  REFUNDED
+}
+
+enum OrderPaidWith {
+  MONEY
+  POINTS
+  MIXED
+}
+
+enum ContentPostType {
+  NEWS
+}
+
+enum ContentPostStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum PurchaseAssistStatus {
+  OPEN
+  IN_REVIEW
+  DONE
+}
+
+model User {
+  id              String    @id @default(uuid()) @db.Uuid
+  email           String    @unique
+  emailVerifiedAt DateTime? @db.Timestamptz(6)
+  role            UserRole
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  sessions               Session[]
+  membership             Membership?
+  pointsLedger           PointsLedger[]
+  products               Product[]
+  productChangeRequests  ProductChangeRequest[]
+  orders                 Order[]
+  purchaseAssistRequests PurchaseAssistRequest[]
+  auditLogs              AuditLog[] @relation("AuditLogActor")
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  tokenHash String   @unique
+  expiresAt DateTime @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model MembershipPlan {
+  id                   String            @id @default(uuid()) @db.Uuid
+  code                 MembershipPlanCode @unique
+  priceCents           Int
+  currency             String            @default("EUR")
+  periodDays           Int               @default(28)
+  pointsPolicyType     PointsPolicyType
+  pointsFixedAmount    Int?
+  pointsConversionRate Decimal?          @db.Decimal(10, 4)
+  isActive             Boolean           @default(true)
+
+  memberships     Membership[]
+  checkoutSessions CheckoutSession[]
+
+  @@map("membership_plans")
+}
+
+model Membership {
+  id                 String           @id @default(uuid()) @db.Uuid
+  userId             String           @unique @db.Uuid
+  planId             String           @db.Uuid
+  status             MembershipStatus
+  currentPeriodStart DateTime         @db.Timestamptz(6)
+  currentPeriodEnd   DateTime         @db.Timestamptz(6)
+  autoRenew          Boolean          @default(true)
+  provider           Provider
+  providerSubId      String           @unique
+  createdAt          DateTime         @default(now()) @db.Timestamptz(6)
+  updatedAt          DateTime         @updatedAt @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id])
+  plan MembershipPlan @relation(fields: [planId], references: [id])
+
+  @@index([status])
+  @@index([currentPeriodEnd])
+  @@map("memberships")
+}
+
+model CheckoutSession {
+  id                String                @id @default(uuid()) @db.Uuid
+  kind              CheckoutSessionKind
+  planId            String                @db.Uuid
+  email             String
+  provider          Provider
+  providerSessionId String                @unique
+  status            CheckoutSessionStatus
+  expiresAt         DateTime              @db.Timestamptz(6)
+  createdAt         DateTime              @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime              @updatedAt @db.Timestamptz(6)
+
+  plan MembershipPlan @relation(fields: [planId], references: [id])
+
+  @@index([email])
+  @@index([status])
+  @@index([expiresAt])
+  @@map("checkout_sessions")
+}
+
+model PointsLedger {
+  id        String              @id @default(uuid()) @db.Uuid
+  userId    String              @db.Uuid
+  delta     Int
+  reason    PointsLedgerReason
+  refType   PointsLedgerRefType
+  refId     String
+  createdAt DateTime            @default(now()) @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+  @@map("points_ledger")
+}
+
+model Product {
+  id             String        @id @default(uuid()) @db.Uuid
+  sellerId       String        @db.Uuid
+  title          String
+  description    String
+  specsJson      Json          @db.JsonB
+  priceCents     Int
+  currency       String        @default("EUR")
+  status         ProductStatus
+  isOutOfStock   Boolean       @default(false)
+  pointsEligible Boolean       @default(false)
+  pointsPrice    Int?
+  createdAt      DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime      @updatedAt @db.Timestamptz(6)
+
+  seller         User                 @relation(fields: [sellerId], references: [id])
+  media          ProductMedia[]
+  changeRequests ProductChangeRequest[]
+  orderItems     OrderItem[]
+
+  @@index([status])
+  @@index([sellerId])
+  @@index([title])
+  @@map("products")
+}
+
+model ProductMedia {
+  id        String           @id @default(uuid()) @db.Uuid
+  productId String           @db.Uuid
+  type      ProductMediaType
+  url       String
+  sortOrder Int
+  createdAt DateTime         @default(now()) @db.Timestamptz(6)
+
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([productId, sortOrder])
+  @@map("product_media")
+}
+
+model ProductChangeRequest {
+  id               String             @id @default(uuid()) @db.Uuid
+  productId        String             @db.Uuid
+  sellerId         String             @db.Uuid
+  proposedDataJson Json               @db.JsonB
+  status           ChangeRequestStatus
+  adminNote        String?
+  createdAt        DateTime           @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime           @updatedAt @db.Timestamptz(6)
+
+  product Product @relation(fields: [productId], references: [id])
+  seller  User    @relation(fields: [sellerId], references: [id])
+
+  @@index([productId, status])
+  @@map("product_change_requests")
+}
+
+model Order {
+  id                String       @id @default(uuid()) @db.Uuid
+  userId            String       @db.Uuid
+  status            OrderStatus
+  totalCents        Int
+  currency          String       @default("EUR")
+  paidWith          OrderPaidWith
+  shippingIncluded  Boolean      @default(true)
+  provider          Provider
+  providerPaymentId String?
+  createdAt         DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime     @updatedAt @db.Timestamptz(6)
+
+  user  User        @relation(fields: [userId], references: [id])
+  items OrderItem[]
+
+  @@index([userId, createdAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id             String  @id @default(uuid()) @db.Uuid
+  orderId        String  @db.Uuid
+  productId      String  @db.Uuid
+  qty            Int
+  unitPriceCents Int
+  unitPoints     Int?
+
+  order   Order   @relation(fields: [orderId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+model ContentPost {
+  id          String            @id @default(uuid()) @db.Uuid
+  type        ContentPostType
+  title       String
+  slug        String            @unique
+  excerpt     String?
+  body        String
+  tags        String[]          @db.Text
+  status      ContentPostStatus
+  publishedAt DateTime?         @db.Timestamptz(6)
+  createdAt   DateTime          @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime          @updatedAt @db.Timestamptz(6)
+
+  @@index([status, publishedAt])
+  @@map("content_posts")
+}
+
+model PurchaseAssistRequest {
+  id         String                @id @default(uuid()) @db.Uuid
+  userId     String                @db.Uuid
+  urlToCheck String
+  notes      String?
+  status     PurchaseAssistStatus
+  outcome    String?
+  createdAt  DateTime              @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime              @updatedAt @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, status])
+  @@map("purchase_assist_requests")
+}
+
+model AuditLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  actorUserId String?  @db.Uuid
+  action      String
+  entity      String
+  entityId    String?  @db.Uuid
+  metadataJson Json    @db.JsonB
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+
+  actorUser User? @relation("AuditLogActor", fields: [actorUserId], references: [id])
+
+  @@index([createdAt])
+  @@index([actorUserId])
+  @@index([entity, entityId])
+  @@map("audit_logs")
+}
+
+model WebhookEvent {
+  id         String    @id @default(uuid()) @db.Uuid
+  provider   Provider
+  eventId    String    @unique
+  type       String
+  payload    Json      @db.JsonB
+  processedAt DateTime? @db.Timestamptz(6)
+  createdAt  DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@map("webhook_events")
+}
