@@ -24,7 +24,7 @@ const Home: React.FC = () => {
 
         <div className={`relative z-20 max-w-7xl mx-auto w-full pt-32 transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <div className="max-w-3xl">
-            <p className="text-3xl md:text-5xl text-[#0b224e]/80 mb-6 animate-fade-in inline-block -rotate-2 origin-left" style={{ fontFamily: "'Caveat', cursive" }}>
+            <p className="text-3xl md:text-3xl text-[#0b224e]/80 mb-6 animate-fade-in inline-block -rotate-2 origin-left tracking-tighter" style={{ fontFamily: "'Homemade Apple', cursive" }}>
               Consapevolezza Digitale
             </p>
 
