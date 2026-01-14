@@ -24,18 +24,18 @@ const ProductDetail: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
+    <div className="max-w-7xl mx-auto px-4 pt-32 pb-12">
       <Link to="/marketplace" className="text-sm font-bold text-slate-400 hover:text-[#0b224e] mb-8 inline-block">← Torna al Marketplace</Link>
-      
+
       <div className="grid md:grid-cols-2 gap-16">
         <div>
           <img src={product.imageUrl} alt={product.name} className="w-full rounded-2xl shadow-sm border" />
           <div className="grid grid-cols-4 gap-4 mt-4">
-             {[1,2,3].map(i => (
-               <div key={i} className="aspect-square bg-slate-100 rounded-lg border overflow-hidden">
-                  <img src={`https://picsum.photos/seed/${i}/200`} alt="" className="w-full h-full object-cover" />
-               </div>
-             ))}
+            {[1, 2, 3].map(i => (
+              <div key={i} className="aspect-square bg-slate-100 rounded-lg border overflow-hidden">
+                <img src={`https://picsum.photos/seed/${i}/200`} alt="" className="w-full h-full object-cover" />
+              </div>
+            ))}
           </div>
         </div>
 
@@ -47,7 +47,7 @@ const ProductDetail: React.FC = () => {
           </div>
 
           <p className="text-slate-600 mb-8 leading-relaxed">{product.description}</p>
-          
+
           <div className="bg-slate-50 p-6 rounded-xl border mb-8">
             <h4 className="font-bold text-[#0b224e] mb-4 uppercase text-xs tracking-widest">Specifiche Tecniche</h4>
             <ul className="space-y-2 text-sm text-slate-600">
@@ -58,14 +58,14 @@ const ProductDetail: React.FC = () => {
           {user?.isMember ? (
             <div className="space-y-4">
               <button className="w-full py-4 bg-[#0b224e] text-white font-bold rounded-lg hover:opacity-95 transition flex items-center justify-center">
-                 Aggiungi al carrello
+                Aggiungi al carrello
               </button>
               {user.isPremium && product.isPointsEligible && (
-                <button 
+                <button
                   disabled={points < product.pointsPrice}
                   className={`w-full py-4 border-2 rounded-lg font-bold transition flex items-center justify-center ${points >= product.pointsPrice ? 'border-slate-800 text-[#0b224e] bg-slate-50 hover:bg-slate-100' : 'border-slate-200 text-slate-300 cursor-not-allowed'}`}
                 >
-                   Paga con {product.pointsPrice} Punti Obaldi
+                  Paga con {product.pointsPrice} Punti Obaldi
                 </button>
               )}
             </div>

@@ -17,14 +17,14 @@ const SellerDashboard: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
+    <div className="max-w-4xl mx-auto px-4 pt-32 pb-12">
       <h1 className="text-3xl font-bold text-[#0b224e] mb-8">Dashboard Venditore</h1>
 
       {submitted ? (
         <div className="bg-green-50 border border-green-200 text-green-700 p-8 rounded-2xl text-center">
-           <h2 className="text-xl font-bold mb-2">Prodotto inviato per revisione</h2>
-           <p className="text-sm">Il team Obaldi analizzerà la tua proposta. Riceverai una notifica ad approvazione completata.</p>
-           <button onClick={() => setSubmitted(false)} className="mt-6 text-sm font-bold underline">Inserisci un altro prodotto</button>
+          <h2 className="text-xl font-bold mb-2">Prodotto inviato per revisione</h2>
+          <p className="text-sm">Il team Obaldi analizzerà la tua proposta. Riceverai una notifica ad approvazione completata.</p>
+          <button onClick={() => setSubmitted(false)} className="mt-6 text-sm font-bold underline">Inserisci un altro prodotto</button>
         </div>
       ) : (
         <div className="bg-white border rounded-2xl p-8 shadow-sm">
@@ -45,8 +45,8 @@ const SellerDashboard: React.FC = () => {
               <textarea required rows={4} className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#0b224e] outline-none" placeholder="Descrivi il prodotto, la sua utilità e come tutela l'utente..."></textarea>
             </div>
             <div className="border-t pt-6 flex justify-between items-center">
-               <p className="text-xs text-slate-400 max-w-xs">Il prodotto non sarà visibile finché non verrà approvato da un amministratore Obaldi.</p>
-               <button type="submit" className="bg-[#0b224e] text-white px-8 py-3 rounded-lg font-bold">Invia per Revisione</button>
+              <p className="text-xs text-slate-400 max-w-xs">Il prodotto non sarà visibile finché non verrà approvato da un amministratore Obaldi.</p>
+              <button type="submit" className="bg-[#0b224e] text-white px-8 py-3 rounded-lg font-bold">Invia per Revisione</button>
             </div>
           </form>
         </div>

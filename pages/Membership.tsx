@@ -13,11 +13,11 @@ const Membership: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-20">
+    <div className="max-w-7xl mx-auto px-4 pt-32 pb-20">
       <div className="text-center mb-16">
         <h1 className="text-4xl font-bold text-[#0b224e] mb-4">Diventa un Membro Obaldi</h1>
         <p className="text-slate-500 max-w-2xl mx-auto">
-          L'accesso al nostro marketplace è riservato. Scegliendo uno dei nostri piani 
+          L'accesso al nostro marketplace è riservato. Scegliendo uno dei nostri piani
           finanzi la nostra attività di ricerca e tutela anti-truffa.
         </p>
       </div>
@@ -32,7 +32,7 @@ const Membership: React.FC = () => {
             <li className="flex items-center"><span className="text-slate-400 mr-2">✓</span> Spedizioni gratuite incluse</li>
             <li className="flex items-center"><span className="text-slate-400 mr-2">✓</span> News Alert Truffe prioritari</li>
           </ul>
-          <button 
+          <button
             onClick={() => handleSelect(false)}
             className="w-full py-4 border-2 border-[#0b224e] text-[#0b224e] font-bold rounded-lg hover:bg-slate-50 transition"
           >
@@ -51,7 +51,7 @@ const Membership: React.FC = () => {
             <li className="flex items-center"><span className="text-slate-400 mr-2">✓</span> Prodotti esclusivi con Punti</li>
             <li className="flex items-center"><span className="text-slate-400 mr-2">✓</span> Tutte le funzioni di Accesso</li>
           </ul>
-          <button 
+          <button
             onClick={() => handleSelect(true)}
             className="w-full py-4 bg-[#0b224e] text-white font-bold rounded-lg hover:opacity-95 transition"
           >
@@ -59,7 +59,7 @@ const Membership: React.FC = () => {
           </button>
         </div>
       </div>
-      
+
       <p className="mt-12 text-center text-xs text-slate-400">
         Rinnovo automatico ogni 28 giorni. Disdici quando vuoi dalla tua area riservata.
       </p>

@@ -1,31 +1,63 @@
-
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Obaldi - Compri solo se ha senso</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        * { transition: background-color 0.3s ease, border-color 0.3s ease; }
-        body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
-        .bg-primary { background-color: #0b224e; }
-        .text-primary { color: #0b224e; }
-        .bg-secondary { background-color: #a41f2e; }
-        .text-secondary { color: #a41f2e; }
-        
-        /* Smooth Scroll */
-        html { scroll-behavior: smooth; }
-        
-        /* Custom Animations */
-        .fade-in { animation: fadeIn 0.8s ease-out forwards; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    </style>
-<script type="importmap">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Obaldi - Compri solo se ha senso</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Dancing+Script:wght@400;500;600;700&family=Caveat:wght@400;700&family=Satisfy&display=swap"
+    rel="stylesheet">
+  <style>
+    * {
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .bg-primary {
+      background-color: #0b224e;
+    }
+
+    .text-primary {
+      color: #0b224e;
+    }
+
+    .bg-secondary {
+      background-color: #a41f2e;
+    }
+
+    .text-secondary {
+      color: #a41f2e;
+    }
+
+    /* Smooth Scroll */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* Custom Animations */
+    .fade-in {
+      animation: fadeIn 0.8s ease-out forwards;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+  <script type="importmap">
 {
   "imports": {
     "react": "https://esm.sh/react@^19.2.3",
@@ -37,7 +69,10 @@
 }
 </script>
 </head>
+
 <body class="bg-slate-50 text-slate-900">
-    <div id="root"></div>
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
 </body>
+
 </html>

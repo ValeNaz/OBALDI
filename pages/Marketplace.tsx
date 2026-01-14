@@ -18,16 +18,16 @@ const Marketplace: React.FC = () => {
   const filtered = MOCK_PRODUCTS.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
+    <div className="max-w-7xl mx-auto px-4 pt-32 pb-12">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
         <div>
           <h1 className="text-4xl font-bold text-[#0b224e]">Marketplace</h1>
           <p className="text-slate-500 mt-1">Prodotti verificati e pronti all'uso.</p>
         </div>
         <div className="relative w-full md:w-96">
-          <input 
-            type="text" 
-            placeholder="Cerca prodotto..." 
+          <input
+            type="text"
+            placeholder="Cerca prodotto..."
             className="w-full pl-4 pr-10 py-3 border rounded-lg focus:ring-2 focus:ring-[#0b224e] outline-none"
             value={search}
             onChange={(e) => setSearch(e.target.value)}

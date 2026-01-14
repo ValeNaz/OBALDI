@@ -12,58 +12,55 @@ const Home: React.FC = () => {
   return (
     <div className="bg-white overflow-hidden">
       {/* HERO SECTION - Ultra Modern & Minimal con Focus Marketplace */}
-      <section className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden bg-[#0b224e]">
-        {/* Background Video con Overlay Gradiente per profondità */}
+      <section className="relative min-h-screen flex items-center px-4 overflow-hidden bg-[#0b224e]">
+        {/* Background Image senza overlay */}
         <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0b224e]/90 via-[#0b224e]/70 to-[#0b224e] z-10" />
-          <video
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-full h-full object-cover scale-105 animate-[slow-zoom_20s_infinite_alternate]"
-          >
-            <source src="https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-a-shopping-cart-42610-large.mp4" type="video/mp4" />
-          </video>
+          <img
+            src="/media/Hero_Home.png"
+            alt="Obaldi Hero"
+            className="w-full h-full object-cover"
+          />
         </div>
 
-        <div className={`relative z-20 max-w-5xl mx-auto text-center transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-          <div className="inline-block mb-8 px-4 py-1.5 border border-white/20 rounded-full backdrop-blur-md bg-white/5 animate-fade-in">
-            <span className="text-white/80 text-xs font-bold uppercase tracking-[0.3em]">Consapevolezza Digitale</span>
-          </div>
-          
-          <h1 className="text-6xl md:text-8xl font-extrabold text-white leading-[1.05] tracking-tight mb-8">
-            Obaldi.<br />
-            <span className="text-white/40">L'acquisto è una scelta.</span>
-          </h1>
-          
-          <p className="max-w-2xl mx-auto text-xl md:text-2xl text-white/70 mb-16 font-light leading-relaxed">
-            Eliminiamo il rumore del marketing aggressivo. <br className="hidden md:block" />
-            Ti aiutiamo a comprare solo ciò che serve davvero.
-          </p>
+        <div className={`relative z-20 max-w-7xl mx-auto w-full pt-32 transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+          <div className="max-w-3xl">
+            <p className="text-3xl md:text-5xl text-[#0b224e]/80 mb-6 animate-fade-in inline-block -rotate-2 origin-left" style={{ fontFamily: "'Caveat', cursive" }}>
+              Consapevolezza Digitale
+            </p>
 
-          <div className="flex flex-col items-center justify-center gap-8">
-            {/* Primary CTA - Marketplace (Massima Importanza) */}
-            <Link 
-              to="/marketplace" 
-              className="group relative px-16 py-7 bg-white text-[#0b224e] rounded-full font-black text-2xl overflow-hidden transition-all hover:scale-105 shadow-[0_0_50px_rgba(255,255,255,0.15)] hover:shadow-[0_0_70px_rgba(255,255,255,0.3)] active:scale-95"
-            >
-              <span className="relative z-10 flex items-center gap-3">
-                Esplora Marketplace
-                <svg className="w-6 h-6 transition-transform group-hover:translate-x-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </span>
-              <div className="absolute inset-0 bg-slate-100 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-            </Link>
+            <h1 className="text-6xl md:text-8xl font-extrabold text-[#0b224e] leading-[1.05] tracking-tight mb-8">
+              Obaldi.<br />
+              <span className="text-[#0b224e]/40">L'acquisto è una scelta.</span>
+            </h1>
 
-            {/* Secondary CTA - Membership */}
-            <Link 
-              to="/membership" 
-              className="px-10 py-4 text-white/60 hover:text-white rounded-full font-bold text-lg transition-all hover:bg-white/5"
-            >
-              oppure Diventa Membro →
-            </Link>
+            <p className="text-xl md:text-2xl text-[#0b224e]/70 mb-16 font-light leading-relaxed">
+              Eliminiamo il rumore del marketing aggressivo. <br className="hidden md:block" />
+              Ti aiutiamo a comprare solo ciò che serve davvero.
+            </p>
+
+            <div className="flex flex-col items-start gap-8">
+              {/* Primary CTA - Marketplace (Massima Importanza) */}
+              <Link
+                to="/marketplace"
+                className="group relative px-16 py-7 bg-[#0b224e] text-white rounded-full font-black text-2xl overflow-hidden transition-all hover:scale-105 shadow-[0_0_50px_rgba(11,34,78,0.2)] hover:shadow-[0_0_70px_rgba(11,34,78,0.4)] active:scale-95"
+              >
+                <span className="relative z-10 flex items-center gap-3">
+                  Esplora Marketplace
+                  <svg className="w-6 h-6 transition-transform group-hover:translate-x-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </span>
+                <div className="absolute inset-0 bg-[#a41f2e] translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+              </Link>
+
+              {/* Secondary CTA - Membership */}
+              <Link
+                to="/membership"
+                className="px-10 py-4 text-[#0b224e]/60 hover:text-[#0b224e] rounded-full font-bold text-lg transition-all hover:bg-white/30"
+              >
+                oppure Diventa Membro →
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -93,10 +90,10 @@ const Home: React.FC = () => {
           <div className="relative group transition-all duration-700 hover:scale-[1.02]">
             <div className="absolute -inset-4 bg-slate-50 rounded-[3rem] -z-10 transition-transform group-hover:rotate-1" />
             <div className="bg-white p-12 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50">
-               <p className="text-3xl font-medium text-[#0b224e] leading-snug">
-                 "La nostra missione non è vendere, ma educare alla scelta."
-               </p>
-               <p className="mt-8 text-[#a41f2e] font-bold uppercase tracking-widest text-sm">Team Obaldi</p>
+              <p className="text-3xl font-medium text-[#0b224e] leading-snug">
+                "La nostra missione non è vendere, ma educare alla scelta."
+              </p>
+              <p className="mt-8 text-[#a41f2e] font-bold uppercase tracking-widest text-sm">Team Obaldi</p>
             </div>
           </div>
         </div>
@@ -117,7 +114,7 @@ const Home: React.FC = () => {
             ].map((item, i) => (
               <div key={i} className="bg-white p-10 rounded-3xl border border-slate-200 hover:border-[#0b224e] hover:shadow-2xl hover:shadow-[#0b224e]/5 transition-all duration-500 group">
                 <div className="w-14 h-14 bg-slate-50 rounded-2xl mb-8 flex items-center justify-center group-hover:bg-[#0b224e] transition-colors duration-500">
-                  <span className="text-[#0b224e] text-xl font-bold group-hover:text-white">{i+1}</span>
+                  <span className="text-[#0b224e] text-xl font-bold group-hover:text-white">{i + 1}</span>
                 </div>
                 <h3 className="text-2xl font-bold text-[#0b224e] mb-4">{item.t}</h3>
                 <p className="text-slate-500 leading-relaxed">{item.d}</p>
@@ -152,8 +149,8 @@ const Home: React.FC = () => {
       <section className="py-48 px-4 text-center bg-white">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-6xl font-bold text-[#0b224e] mb-12 tracking-tight">Compri solo se ha senso.</h2>
-          <Link 
-            to="/marketplace" 
+          <Link
+            to="/marketplace"
             className="inline-block bg-[#0b224e] text-white px-20 py-8 rounded-full font-black text-3xl hover:shadow-[0_20px_60px_rgba(11,34,78,0.3)] transition-all hover:-translate-y-2 active:scale-95"
           >
             Entra nel Marketplace
