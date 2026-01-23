@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/src/core/db";
 import { AuthError, requireRole, requireSession } from "@/src/core/auth/guard";
+import { enforceSameOrigin } from "@/src/core/security/csrf";
 
 const schema = z.object({
   title: z.string().min(2),
@@ -9,11 +10,15 @@ const schema = z.object({
   specsJson: z.record(z.unknown()),
   priceCents: z.number().int().positive(),
   currency: z.string().min(3).max(3).default("EUR"),
+  premiumOnly: z.boolean().default(false),
   pointsEligible: z.boolean().default(false),
   pointsPrice: z.number().int().positive().optional()
 });
 
 export async function POST(request: Request) {
+  const csrf = enforceSameOrigin(request);
+  if (csrf) return csrf;
+
   const body = await request.json().catch(() => null);
   const parsed = schema.safeParse(body);
 
@@ -54,6 +59,7 @@ export async function POST(request: Request) {
       priceCents: parsed.data.priceCents,
       currency: parsed.data.currency,
       status: "DRAFT",
+      premiumOnly: parsed.data.premiumOnly,
       pointsEligible: parsed.data.pointsEligible,
       pointsPrice: parsed.data.pointsEligible ? parsed.data.pointsPrice ?? null : null
     }

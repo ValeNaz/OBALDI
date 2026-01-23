@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/src/core/db";
 import { AuthError, requireSession } from "@/src/core/auth/guard";
 import { hashPassword, verifyPassword } from "@/src/core/auth/passwords";
+import { enforceSameOrigin } from "@/src/core/security/csrf";
 
 const schema = z.object({
   currentPassword: z.string().optional(),
@@ -10,6 +11,9 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
+  const csrf = enforceSameOrigin(request);
+  if (csrf) return csrf;
+
   const body = await request.json().catch(() => null);
   const parsed = schema.safeParse(body);
 

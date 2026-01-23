@@ -113,6 +113,7 @@ model User {
   emailVerifiedAt DateTime? @db.Timestamptz(6)
   passwordHash    String?
   role            UserRole
+  isDisabled      Boolean   @default(false)
   createdAt       DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
 
@@ -239,6 +240,7 @@ model Product {
   currency       String        @default("EUR")
   status         ProductStatus
   isOutOfStock   Boolean       @default(false)
+  premiumOnly    Boolean       @default(false)
   pointsEligible Boolean       @default(false)
   pointsPrice    Int?
   createdAt      DateTime      @default(now()) @db.Timestamptz(6)
@@ -260,6 +262,7 @@ model ProductMedia {
   productId String           @db.Uuid
   type      ProductMediaType
   url       String
+  storagePath String?
   sortOrder Int
   createdAt DateTime         @default(now()) @db.Timestamptz(6)
 
@@ -293,6 +296,7 @@ model Order {
   totalCents        Int
   currency          String       @default("EUR")
   paidWith          OrderPaidWith
+  pointsSpent       Int          @default(0)
   shippingIncluded  Boolean      @default(true)
   provider          Provider
   providerPaymentId String?

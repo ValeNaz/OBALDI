@@ -1,12 +1,11 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
 export default function ResetPasswordPage() {
-  const searchParams = useSearchParams();
-  const token = searchParams?.get("token");
+  const [token, setToken] = useState<string | null>(null);
+  const [tokenChecked, setTokenChecked] = useState(false);
 
   const [email, setEmail] = useState("");
   const [passwordNew, setPasswordNew] = useState("");
@@ -14,6 +13,13 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    setToken(params.get("token"));
+    setTokenChecked(true);
+  }, []);
 
   const handleRequest = async () => {
     setError(null);
@@ -86,7 +92,7 @@ export default function ResetPasswordPage() {
           Reimposta password
         </h1>
 
-        {token ? (
+        {tokenChecked && token ? (
           <>
             <p className="text-sm text-slate-500">
               Inserisci la nuova password per completare il reset.
@@ -117,7 +123,7 @@ export default function ResetPasswordPage() {
               {loading ? "Aggiornamento..." : "Aggiorna password"}
             </button>
           </>
-        ) : (
+        ) : tokenChecked ? (
           <>
             <p className="text-sm text-slate-500">
               Inserisci la tua email. Ti invieremo un link per reimpostare la password.
@@ -139,6 +145,8 @@ export default function ResetPasswordPage() {
               {loading ? "Invio..." : "Invia link di reset"}
             </button>
           </>
+        ) : (
+          <div className="text-sm text-slate-500">Caricamento...</div>
         )}
 
         {error && (

@@ -5,6 +5,8 @@ import { createSession } from "@/src/core/auth/session";
 import { setSessionCookie } from "@/src/core/auth/cookies";
 import { getPayPalSubscription } from "@/src/core/payments/paypal";
 import { finalizeMembershipCheckout } from "@/src/core/membership/finalize";
+import { sendEmail } from "@/src/core/email/sender";
+import { renderMembershipConfirmation } from "@/src/core/email/templates";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -63,6 +65,23 @@ export async function GET(request: Request) {
     currentPeriodStart,
     currentPeriodEnd
   });
+
+  const membership = await prisma.membership.findUnique({
+    where: { userId },
+    include: { plan: true, user: true }
+  });
+
+  if (membership?.user?.email) {
+    const emailContent = renderMembershipConfirmation({
+      planCode: membership.plan.code,
+      currentPeriodEnd: membership.currentPeriodEnd
+    });
+    try {
+      await sendEmail({ to: membership.user.email, ...emailContent });
+    } catch {
+      // Best-effort email delivery.
+    }
+  }
 
   const { session, token } = await createSession(userId);
   const response = NextResponse.redirect(`${getAppBaseUrl()}/membership?success=1`);

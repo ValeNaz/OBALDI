@@ -18,6 +18,15 @@ type ProfileData = {
   pointsBalance: number;
 };
 
+type PurchaseAssistRequest = {
+  id: string;
+  urlToCheck: string;
+  notes: string | null;
+  status: "OPEN" | "IN_REVIEW" | "DONE";
+  outcome: string | null;
+  createdAt: string;
+};
+
 export default function ProfilePage() {
   const [data, setData] = useState<ProfileData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -27,6 +36,12 @@ export default function ProfilePage() {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
   const [passwordLoading, setPasswordLoading] = useState(false);
+  const [assistRequests, setAssistRequests] = useState<PurchaseAssistRequest[]>([]);
+  const [assistLoading, setAssistLoading] = useState(false);
+  const [assistError, setAssistError] = useState<string | null>(null);
+  const [assistUrl, setAssistUrl] = useState("");
+  const [assistNotes, setAssistNotes] = useState("");
+  const [assistSubmitting, setAssistSubmitting] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -42,6 +57,31 @@ export default function ProfilePage() {
         setData(payload);
       } catch {
         setError("Impossibile caricare il profilo.");
+      }
+    };
+
+    load();
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const load = async () => {
+      try {
+        setAssistLoading(true);
+        const response = await fetch("/api/purchase-assist", {
+          signal: controller.signal
+        });
+        if (!response.ok) {
+          return;
+        }
+        const payload = await response.json();
+        setAssistRequests(payload.requests ?? []);
+      } catch {
+        // Ignore errors for non-premium users.
+      } finally {
+        setAssistLoading(false);
       }
     };
 
@@ -108,6 +148,37 @@ export default function ProfilePage() {
       setPasswordError("Impossibile aggiornare la password.");
     } finally {
       setPasswordLoading(false);
+    }
+  };
+
+  const handleAssistSubmit = async () => {
+    if (!assistUrl.trim()) {
+      setAssistError("Inserisci un URL valido.");
+      return;
+    }
+    setAssistSubmitting(true);
+    setAssistError(null);
+    try {
+      const response = await fetch("/api/purchase-assist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          urlToCheck: assistUrl.trim(),
+          notes: assistNotes.trim() || undefined
+        })
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        setAssistError(payload?.error?.message ?? "Impossibile inviare la richiesta.");
+        return;
+      }
+      setAssistRequests((prev) => [payload.request, ...prev]);
+      setAssistUrl("");
+      setAssistNotes("");
+    } catch {
+      setAssistError("Impossibile inviare la richiesta.");
+    } finally {
+      setAssistSubmitting(false);
     }
   };
 
@@ -234,6 +305,85 @@ export default function ProfilePage() {
             </div>
           ) : (
             <p className="text-slate-500">Nessuna membership attiva.</p>
+          )}
+        </div>
+
+        <div className="glass-card card-pad lg:col-span-3">
+          <h2 className="text-xl font-bold text-[#0b224e] mb-4">Assistenza acquisti (Tutela)</h2>
+          {membership?.planCode === "TUTELA" ? (
+            <div className="space-y-6">
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-bold text-slate-700 mb-2">URL da verificare</label>
+                  <input
+                    type="url"
+                    className="glass-input w-full"
+                    placeholder="https://..."
+                    value={assistUrl}
+                    onChange={(event) => setAssistUrl(event.target.value)}
+                  />
+                </div>
+                <div className="md:col-span-3">
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Note (opzionali)</label>
+                  <textarea
+                    rows={3}
+                    className="glass-input w-full"
+                    placeholder="Dettagli utili per la verifica"
+                    value={assistNotes}
+                    onChange={(event) => setAssistNotes(event.target.value)}
+                  />
+                </div>
+              </div>
+              {assistError && (
+                <div className="text-sm text-red-600 font-semibold bg-red-50 border border-red-100 rounded-xl px-4 py-3">
+                  {assistError}
+                </div>
+              )}
+              <button
+                onClick={handleAssistSubmit}
+                disabled={assistSubmitting}
+                className="py-3 px-8 bg-[#0b224e] text-white rounded-full font-bold hover:shadow-glow-soft transition"
+              >
+                {assistSubmitting ? "Invio in corso..." : "Invia richiesta"}
+              </button>
+              <div className="mt-6">
+                <h3 className="text-sm font-bold text-slate-700 mb-3">Richieste inviate</h3>
+                {assistLoading ? (
+                  <p className="text-sm text-slate-500">Caricamento richieste...</p>
+                ) : assistRequests.length === 0 ? (
+                  <p className="text-sm text-slate-500">Nessuna richiesta ancora inviata.</p>
+                ) : (
+                  <div className="space-y-3 text-sm">
+                    {assistRequests.map((request) => (
+                      <div key={request.id} className="glass-panel p-4">
+                        <div className="flex flex-wrap gap-2 justify-between">
+                          <span className="font-semibold text-[#0b224e]">{request.urlToCheck}</span>
+                          <span className="text-xs uppercase tracking-widest text-slate-400 font-bold">
+                            {request.status === "OPEN"
+                              ? "Aperta"
+                              : request.status === "IN_REVIEW"
+                              ? "In revisione"
+                              : "Completata"}
+                          </span>
+                        </div>
+                        {request.outcome && (
+                          <p className="text-xs text-slate-500 mt-2">Esito: {request.outcome}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="text-sm text-slate-500">
+              La verifica degli acquisti è disponibile solo per i membri Tutela.
+              <div className="mt-4">
+                <Link href="/membership" className="text-sm font-bold text-[#0b224e]">
+                  Passa a Tutela →
+                </Link>
+              </div>
+            </div>
           )}
         </div>
       </div>

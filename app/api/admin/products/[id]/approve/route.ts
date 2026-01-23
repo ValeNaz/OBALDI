@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/src/core/db";
 import { AuthError, requireRole, requireSession } from "@/src/core/auth/guard";
+import { enforceSameOrigin } from "@/src/core/security/csrf";
 
 export async function POST(
-  _request: Request,
+  request: Request,
   { params }: { params: { id: string } }
 ) {
+  const csrf = enforceSameOrigin(request);
+  if (csrf) return csrf;
+
   let session;
   try {
     session = await requireSession();

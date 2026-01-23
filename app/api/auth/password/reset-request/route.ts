@@ -4,6 +4,7 @@ import crypto from "crypto";
 import { prisma } from "@/src/core/db";
 import { getAppBaseUrl } from "@/src/core/config";
 import { sendEmail } from "@/src/core/email/sender";
+import { enforceSameOrigin } from "@/src/core/security/csrf";
 
 const schema = z.object({
   email: z.string().email()
@@ -15,6 +16,9 @@ const hashToken = (token: string) =>
   crypto.createHash("sha256").update(token).digest("hex");
 
 export async function POST(request: Request) {
+  const csrf = enforceSameOrigin(request);
+  if (csrf) return csrf;
+
   const body = await request.json().catch(() => null);
   const parsed = schema.safeParse(body);
 

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/src/core/db";
 import { AuthError, requireRole, requireSession } from "@/src/core/auth/guard";
+import { enforceSameOrigin } from "@/src/core/security/csrf";
+import { notifyAdmins } from "@/src/core/email/notifications";
 
 const schema = z.object({
   proposedDataJson: z.record(z.unknown())
@@ -11,6 +13,9 @@ export async function POST(
   request: Request,
   { params }: { params: { id: string } }
 ) {
+  const csrf = enforceSameOrigin(request);
+  if (csrf) return csrf;
+
   const body = await request.json().catch(() => null);
   const parsed = schema.safeParse(body);
 
@@ -70,6 +75,16 @@ export async function POST(
       entityId: changeRequest.id,
       metadataJson: { productId: product.id }
     }
+  });
+
+  await notifyAdmins({
+    subject: "Richiesta modifica prodotto",
+    html: `
+      <p>E stata inviata una richiesta di modifica prodotto.</p>
+      <p>Prodotto: ${product.title}</p>
+      <p>ID richiesta: ${changeRequest.id}</p>
+    `,
+    text: `Richiesta modifica prodotto per ${product.title} (ID: ${changeRequest.id})`
   });
 
   return NextResponse.json({ changeRequest });

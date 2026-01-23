@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/src/core/db";
+import { getAppBaseUrl } from "@/src/core/config";
 
 export const metadata: Metadata = {
   title: "News e articoli anti-truffa | Obaldi",
@@ -13,8 +14,24 @@ export default async function NewsPage() {
     orderBy: { publishedAt: "desc" }
   });
 
+  const baseUrl = getAppBaseUrl();
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: posts.map((post, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      url: `${baseUrl}/news/${post.slug}`,
+      name: post.title
+    }))
+  };
+
   return (
     <div className="container-max page-pad pt-28 md:pt-32 pb-20">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       <div className="mb-12">
         <h1 className="text-4xl md:text-5xl font-display font-bold text-[#0b224e]">News e articoli anti-truffa</h1>
         <p className="text-slate-500 mt-3 max-w-2xl">

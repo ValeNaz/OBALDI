@@ -24,6 +24,10 @@ export const requireSession = async () => {
     throw new AuthError("UNAUTHORIZED", "Session invalid or expired.", 401);
   }
 
+  if (session.user.isDisabled) {
+    throw new AuthError("USER_DISABLED", "User disabled.", 403);
+  }
+
   return session;
 };
 

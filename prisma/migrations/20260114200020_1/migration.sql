@@ -1,0 +1,1 @@
+-- No-op: this migration was generated before password_reset_tokens existed.

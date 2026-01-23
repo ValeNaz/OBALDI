@@ -6,6 +6,9 @@ import {
   verifyPayPalWebhookSignature
 } from "@/src/core/payments/paypal";
 import { calculateRenewalPoints } from "@/src/core/membership/points";
+import { getClientIp, rateLimit } from "@/src/core/security/rate-limit";
+import { sendEmail } from "@/src/core/email/sender";
+import { renderMembershipRenewal } from "@/src/core/email/templates";
 
 const paypalEventSchema = z
   .object({
@@ -20,6 +23,21 @@ const getSubscriptionIdFromEvent = (event: Record<string, unknown>) => {
 };
 
 export async function POST(request: Request) {
+  const ip = getClientIp(request);
+  const limiter = rateLimit({
+    key: `webhook:paypal:${ip}`,
+    limit: 120,
+    windowMs: 5 * 60 * 1000
+  });
+
+  if (!limiter.allowed) {
+    const retryAfter = Math.ceil((limiter.resetAt - Date.now()) / 1000);
+    return NextResponse.json(
+      { error: { code: "RATE_LIMITED", message: "Too many requests." } },
+      { status: 429, headers: { "Retry-After": String(retryAfter) } }
+    );
+  }
+
   const event = await request.json().catch(() => null);
   if (!event || typeof event !== "object") {
     return NextResponse.json(
@@ -83,7 +101,7 @@ export async function POST(request: Request) {
     const subscription = await getPayPalSubscription(subscriptionId);
     const membership = await tx.membership.findUnique({
       where: { providerSubId: subscription.id },
-      include: { plan: true }
+      include: { plan: true, user: { select: { email: true } } }
     });
 
     if (!membership) {
@@ -135,6 +153,14 @@ export async function POST(request: Request) {
     });
 
     let pointsAwarded = 0;
+    let membershipNotify:
+      | {
+          to: string;
+          planCode: string;
+          currentPeriodEnd: Date;
+          pointsAwarded: number;
+        }
+      | null = null;
     if (nextPeriodEnd.getTime() > previousPeriodEnd.getTime()) {
       pointsAwarded = calculateRenewalPoints(membership.plan);
       if (pointsAwarded > 0) {
@@ -147,6 +173,14 @@ export async function POST(request: Request) {
             refId: membership.id
           }
         });
+      }
+      if (membership.user?.email) {
+        membershipNotify = {
+          to: membership.user.email,
+          planCode: membership.plan.code,
+          currentPeriodEnd: nextPeriodEnd,
+          pointsAwarded
+        };
       }
     }
 
@@ -171,8 +205,21 @@ export async function POST(request: Request) {
       data: { processedAt: new Date() }
     });
 
-    return { handled: true };
+    return { handled: true, notify: membershipNotify };
   });
+
+  if (result?.notify) {
+    try {
+      const emailContent = renderMembershipRenewal({
+        planCode: result.notify.planCode,
+        currentPeriodEnd: result.notify.currentPeriodEnd,
+        pointsAwarded: result.notify.pointsAwarded
+      });
+      await sendEmail({ to: result.notify.to, ...emailContent });
+    } catch {
+      // Best-effort email delivery.
+    }
+  }
 
   return NextResponse.json({ received: true, ...result });
 }

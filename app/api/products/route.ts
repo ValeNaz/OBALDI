@@ -11,13 +11,24 @@ export async function GET(request: Request) {
       ...(query
         ? {
             title: {
-              contains: query,
+              startsWith: query,
               mode: "insensitive"
             }
           }
         : {})
     },
-    orderBy: { createdAt: "desc" }
+    orderBy: { createdAt: "desc" },
+    include: {
+      media: {
+        orderBy: { sortOrder: "asc" },
+        select: {
+          id: true,
+          url: true,
+          type: true,
+          sortOrder: true
+        }
+      }
+    }
   });
 
   return NextResponse.json({ products });

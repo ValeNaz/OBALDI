@@ -5,11 +5,37 @@ import { z } from "zod";
 import { prisma } from "@/src/core/db";
 import { getStripeClient, getStripeWebhookSecret } from "@/src/core/payments/stripe";
 import { calculateRenewalPoints } from "@/src/core/membership/points";
+import { getClientIp, rateLimit } from "@/src/core/security/rate-limit";
+import { sendEmail } from "@/src/core/email/sender";
+import {
+  renderMembershipRenewal,
+  renderOrderConfirmation
+} from "@/src/core/email/templates";
 
 const stripeEventSchema = z.object({
   id: z.string(),
   type: z.string()
 }).passthrough();
+
+type OrderEmailPayload = {
+  to: string;
+  orderId: string;
+  totalCents: number;
+  currency: string;
+  pointsSpent: number;
+  items: {
+    title: string;
+    qty: number;
+    unitPriceCents: number;
+  }[];
+};
+
+type MembershipEmailPayload = {
+  to: string;
+  planCode: string;
+  currentPeriodEnd: Date;
+  pointsAwarded: number;
+};
 
 const mapStripeStatus = (status: Stripe.Subscription.Status) => {
   if (status === "active" || status === "trialing") {
@@ -51,7 +77,10 @@ const handleOrderCheckout = async (
   event: Stripe.Event,
   tx: Prisma.TransactionClient
 ) => {
-  if (event.type !== "checkout.session.completed") {
+  if (
+    event.type !== "checkout.session.completed" &&
+    event.type !== "checkout.session.expired"
+  ) {
     return { handled: false };
   }
 
@@ -83,6 +112,32 @@ const handleOrderCheckout = async (
     return { handled: false };
   }
 
+  if (event.type === "checkout.session.expired") {
+    if (order.status === "CREATED") {
+      await tx.order.update({
+        where: { id: order.id },
+        data: { status: "CANCELED" }
+      });
+
+      await tx.auditLog.create({
+        data: {
+          actorUserId: order.userId,
+          action: "order.canceled",
+          entity: "order",
+          entityId: order.id,
+          metadataJson: {
+            provider: "STRIPE",
+            eventType: event.type
+          }
+        }
+      });
+    }
+
+    return { handled: true };
+  }
+
+  let notify: OrderEmailPayload | null = null;
+
   const paymentIntentId =
     typeof session.payment_intent === "string"
       ? session.payment_intent
@@ -96,6 +151,29 @@ const handleOrderCheckout = async (
         providerPaymentId: paymentIntentId ?? order.providerPaymentId ?? session.id
       }
     });
+
+    const orderDetails = await tx.order.findUnique({
+      where: { id: order.id },
+      include: {
+        user: { select: { email: true } },
+        items: { include: { product: { select: { title: true } } } }
+      }
+    });
+
+    if (orderDetails?.user?.email) {
+      notify = {
+        to: orderDetails.user.email,
+        orderId: orderDetails.id,
+        totalCents: orderDetails.totalCents,
+        currency: orderDetails.currency,
+        pointsSpent: orderDetails.pointsSpent,
+        items: orderDetails.items.map((item) => ({
+          title: item.product.title,
+          qty: item.qty,
+          unitPriceCents: item.unitPriceCents
+        }))
+      };
+    }
 
     await tx.auditLog.create({
       data: {
@@ -112,10 +190,47 @@ const handleOrderCheckout = async (
     });
   }
 
-  return { handled: true };
+  if (order.paidWith === "MIXED" && order.pointsSpent > 0) {
+    const existingSpend = await tx.pointsLedger.findFirst({
+      where: {
+        refType: "ORDER",
+        refId: order.id,
+        reason: "SPEND"
+      }
+    });
+
+    if (!existingSpend) {
+      await tx.pointsLedger.create({
+        data: {
+          userId: order.userId,
+          delta: -order.pointsSpent,
+          reason: "SPEND",
+          refType: "ORDER",
+          refId: order.id
+        }
+      });
+    }
+  }
+
+  return { handled: true, notify };
 };
 
 export async function POST(request: Request) {
+  const ip = getClientIp(request);
+  const limiter = rateLimit({
+    key: `webhook:stripe:${ip}`,
+    limit: 120,
+    windowMs: 5 * 60 * 1000
+  });
+
+  if (!limiter.allowed) {
+    const retryAfter = Math.ceil((limiter.resetAt - Date.now()) / 1000);
+    return NextResponse.json(
+      { error: { code: "RATE_LIMITED", message: "Too many requests." } },
+      { status: 429, headers: { "Retry-After": String(retryAfter) } }
+    );
+  }
+
   const signature = request.headers.get("stripe-signature");
   if (!signature) {
     return NextResponse.json(
@@ -174,7 +289,7 @@ export async function POST(request: Request) {
         where: { eventId: parsed.data.id },
         data: { processedAt: new Date() }
       });
-      return { handled: true, kind: "order" };
+      return { handled: true, kind: "order", notify: orderHandled.notify ?? null };
     }
 
     const subscription = await getStripeSubscription(event);
@@ -188,7 +303,7 @@ export async function POST(request: Request) {
 
     const membership = await tx.membership.findUnique({
       where: { providerSubId: subscription.id },
-      include: { plan: true }
+      include: { plan: true, user: { select: { email: true } } }
     });
 
     if (!membership) {
@@ -227,6 +342,7 @@ export async function POST(request: Request) {
     });
 
     let pointsAwarded = 0;
+    let membershipNotify: MembershipEmailPayload | null = null;
     if (nextPeriodEnd.getTime() > previousPeriodEnd.getTime()) {
       pointsAwarded = calculateRenewalPoints(membership.plan);
       if (pointsAwarded > 0) {
@@ -239,6 +355,14 @@ export async function POST(request: Request) {
             refId: membership.id
           }
         });
+      }
+      if (membership.user?.email) {
+        membershipNotify = {
+          to: membership.user.email,
+          planCode: membership.plan.code,
+          currentPeriodEnd: nextPeriodEnd,
+          pointsAwarded
+        };
       }
     }
 
@@ -263,8 +387,38 @@ export async function POST(request: Request) {
       data: { processedAt: new Date() }
     });
 
-    return { handled: true };
+    return { handled: true, kind: "membership", notify: membershipNotify };
   });
+
+  if (result?.notify && result.kind === "order") {
+    const payload = result.notify as OrderEmailPayload;
+    try {
+      const emailContent = renderOrderConfirmation({
+        orderId: payload.orderId,
+        totalCents: payload.totalCents,
+        currency: payload.currency,
+        pointsSpent: payload.pointsSpent,
+        items: payload.items
+      });
+      await sendEmail({ to: payload.to, ...emailContent });
+    } catch {
+      // Best-effort email delivery.
+    }
+  }
+
+  if (result?.notify && result.kind === "membership") {
+    const payload = result.notify as MembershipEmailPayload;
+    try {
+      const emailContent = renderMembershipRenewal({
+        planCode: payload.planCode,
+        currentPeriodEnd: payload.currentPeriodEnd,
+        pointsAwarded: payload.pointsAwarded
+      });
+      await sendEmail({ to: payload.to, ...emailContent });
+    } catch {
+      // Best-effort email delivery.
+    }
+  }
 
   return NextResponse.json({ received: true, ...result });
 }

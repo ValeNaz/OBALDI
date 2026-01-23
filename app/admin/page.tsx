@@ -11,7 +11,7 @@ export default async function AdminPage() {
     requireRole(session.user.role, allowedRoles);
   } catch (error) {
     if (error instanceof AuthError) {
-      redirect("/");
+      redirect(`/admin/login?error=${error.code}`);
     }
     throw error;
   }

@@ -8,14 +8,25 @@ type CreatedProduct = {
   priceCents: number;
 };
 
+type UploadedMedia = {
+  id: string;
+  url: string;
+  type: "IMAGE" | "VIDEO";
+  sortOrder: number;
+};
+
 const SellerDashboard = () => {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<CreatedProduct | null>(null);
+  const [mediaItems, setMediaItems] = useState<UploadedMedia[]>([]);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState({
     title: "",
     description: "",
     price: "",
+    premiumOnly: false,
     pointsEligible: false,
     pointsPrice: "",
     specsJson: '{"format":"pdf"}'
@@ -51,6 +62,7 @@ const SellerDashboard = () => {
       specsJson: specs,
       priceCents: Math.round(priceNumber * 100),
       currency: "EUR",
+      premiumOnly: form.premiumOnly,
       pointsEligible: form.pointsEligible,
       pointsPrice: form.pointsEligible ? pointsPriceNumber ?? undefined : undefined
     };
@@ -73,7 +85,7 @@ const SellerDashboard = () => {
         title: data.product.title,
         priceCents: data.product.priceCents
       });
-      setSubmitted(true);
+      setSubmitted(false);
     };
 
     createProduct();
@@ -92,6 +104,58 @@ const SellerDashboard = () => {
 
     setError(null);
     setSubmitted(true);
+  };
+
+  const handleMediaUpload = async (files: FileList | null) => {
+    if (!files || !created) return;
+    setUploadError(null);
+    setUploading(true);
+    const uploads = Array.from(files);
+
+    for (const file of uploads) {
+      const mediaType = file.type.startsWith("video/") ? "VIDEO" : "IMAGE";
+      try {
+        const presignResponse = await fetch("/api/seller/media/presign", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            productId: created.id,
+            fileName: file.name,
+            contentType: file.type,
+            sizeBytes: file.size,
+            mediaType
+          })
+        });
+
+        const presignPayload = await presignResponse.json().catch(() => null);
+        if (!presignResponse.ok) {
+          setUploadError(presignPayload?.error?.message ?? "Errore durante l'upload.");
+          continue;
+        }
+
+        const uploadResult = await fetch(presignPayload.uploadUrl, {
+          method: "PUT",
+          headers: {
+            "Content-Type": file.type,
+            "x-upsert": "true"
+          },
+          body: file
+        });
+
+        if (!uploadResult.ok) {
+          setUploadError("Impossibile caricare il file. Riprova.");
+          continue;
+        }
+
+        setMediaItems((prev) =>
+          [...prev, presignPayload.media].sort((a, b) => a.sortOrder - b.sortOrder)
+        );
+      } catch {
+        setUploadError("Impossibile caricare il file. Riprova.");
+      }
+    }
+
+    setUploading(false);
   };
 
   return (
@@ -173,6 +237,16 @@ const SellerDashboard = () => {
               <label className="flex items-center gap-3 text-sm font-bold text-slate-700">
                 <input
                   type="checkbox"
+                  checked={form.premiumOnly}
+                  onChange={(event) =>
+                    setForm((prev) => ({ ...prev, premiumOnly: event.target.checked }))
+                  }
+                />
+                Solo per Premium (Tutela)
+              </label>
+              <label className="flex items-center gap-3 text-sm font-bold text-slate-700">
+                <input
+                  type="checkbox"
                   checked={form.pointsEligible}
                   onChange={(event) =>
                     setForm((prev) => ({ ...prev, pointsEligible: event.target.checked }))
@@ -182,7 +256,7 @@ const SellerDashboard = () => {
               </label>
               {form.pointsEligible && (
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">Prezzo in punti</label>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Punti massimi utilizzabili</label>
                   <input
                     type="number"
                     className="glass-input w-full"
@@ -204,17 +278,53 @@ const SellerDashboard = () => {
         </div>
       )}
       {created && !submitted && (
-        <div className="mt-6 glass-panel p-6 flex items-center justify-between">
-          <div>
-            <p className="text-sm font-bold text-[#0b224e]">Prodotto creato: {created.title}</p>
-            <p className="text-xs text-slate-500">€{(created.priceCents / 100).toFixed(2)}</p>
+        <div className="mt-6 space-y-4">
+          <div className="glass-panel p-6 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-bold text-[#0b224e]">Prodotto creato: {created.title}</p>
+              <p className="text-xs text-slate-500">€{(created.priceCents / 100).toFixed(2)}</p>
+            </div>
+            <button
+              onClick={handleSubmitForReview}
+              className="bg-[#0b224e] text-white px-6 py-2 rounded-full text-sm font-bold shadow-glow-soft"
+            >
+              Invia per revisione
+            </button>
           </div>
-          <button
-            onClick={handleSubmitForReview}
-            className="bg-[#0b224e] text-white px-6 py-2 rounded-full text-sm font-bold shadow-glow-soft"
-          >
-            Invia per revisione
-          </button>
+          <div className="glass-panel p-6">
+            <h3 className="text-sm font-bold text-[#0b224e] mb-3">Carica immagini o video</h3>
+            <p className="text-xs text-slate-500 mb-4">
+              Formati supportati: JPG, PNG, WEBP, MP4. Dimensione max 10MB (immagini) / 100MB (video).
+            </p>
+            {uploadError && <p className="text-xs text-red-600 font-semibold mb-3">{uploadError}</p>}
+            <input
+              type="file"
+              multiple
+              accept="image/jpeg,image/png,image/webp,video/mp4,video/webm"
+              disabled={uploading}
+              onChange={(event) => handleMediaUpload(event.target.files)}
+              className="text-sm"
+            />
+            {mediaItems.length > 0 && (
+              <div className="mt-4 grid grid-cols-4 gap-3">
+                {mediaItems.map((media) => (
+                  <div key={media.id} className="aspect-square glass-panel overflow-hidden">
+                    {media.type === "VIDEO" ? (
+                      <video
+                        src={media.url}
+                        muted
+                        playsInline
+                        preload="metadata"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <img src={media.url} alt="" className="w-full h-full object-cover" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

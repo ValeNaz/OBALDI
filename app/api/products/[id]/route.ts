@@ -6,7 +6,18 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   const product = await prisma.product.findUnique({
-    where: { id: params.id }
+    where: { id: params.id },
+    include: {
+      media: {
+        orderBy: { sortOrder: "asc" },
+        select: {
+          id: true,
+          url: true,
+          type: true,
+          sortOrder: true
+        }
+      }
+    }
   });
 
   if (!product || product.status !== "APPROVED") {

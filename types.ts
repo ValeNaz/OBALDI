@@ -20,6 +20,7 @@ export interface Product {
   status: 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED';
   sellerId: string;
   isPointsEligible: boolean;
+  premiumOnly?: boolean;
 }
 
 export interface NewsArticle {

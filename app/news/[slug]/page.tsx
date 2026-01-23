@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/src/core/db";
+import { getAppBaseUrl } from "@/src/core/config";
 
 type PageProps = {
   params: { slug: string };
@@ -39,8 +40,31 @@ export default async function NewsDetailPage({ params }: PageProps) {
     );
   }
 
+  const baseUrl = getAppBaseUrl();
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    headline: post.title,
+    description: post.excerpt ?? "Notizie e guide per riconoscere truffe online.",
+    datePublished: post.publishedAt?.toISOString() ?? post.createdAt.toISOString(),
+    dateModified: post.updatedAt.toISOString(),
+    mainEntityOfPage: `${baseUrl}/news/${post.slug}`,
+    publisher: {
+      "@type": "Organization",
+      name: "Obaldi",
+      logo: {
+        "@type": "ImageObject",
+        url: `${baseUrl}/media/logo_Obaldi.png`
+      }
+    }
+  };
+
   return (
     <div className="container-max page-pad pt-28 md:pt-32 pb-20">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       <Link href="/news" className="text-sm font-bold text-slate-400 hover:text-[#0b224e] mb-8 inline-block">
         ← Torna alle news
       </Link>

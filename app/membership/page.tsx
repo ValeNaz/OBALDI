@@ -1,17 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { useUser } from "../../context/UserContext";
 
 type Provider = "stripe" | "paypal";
 
 const Membership = () => {
   const { user, refresh } = useUser();
-  const searchParams = useSearchParams();
   const [email, setEmail] = useState(user?.email ?? "");
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     if (user?.email) {
@@ -20,10 +19,13 @@ const Membership = () => {
   }, [user?.email]);
 
   useEffect(() => {
-    if (searchParams?.get("success") === "1") {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("success") === "1") {
+      setSuccess(true);
       refresh();
     }
-  }, [searchParams, refresh]);
+  }, [refresh]);
 
   const handleCheckout = async (planCode: "ACCESSO" | "TUTELA", provider: Provider) => {
     setError(null);
@@ -85,7 +87,7 @@ const Membership = () => {
             {error}
           </div>
         )}
-        {searchParams?.get("success") === "1" && (
+        {success && (
           <div className="mt-4 text-sm text-green-700 font-semibold bg-green-50 border border-green-100 rounded-xl px-4 py-3">
             Membership attiva! Trovi i dettagli nella tua area riservata e puoi impostare la password.
           </div>

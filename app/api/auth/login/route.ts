@@ -4,6 +4,7 @@ import { prisma } from "@/src/core/db";
 import { createSession } from "@/src/core/auth/session";
 import { setSessionCookie } from "@/src/core/auth/cookies";
 import { verifyPassword } from "@/src/core/auth/passwords";
+import { enforceSameOrigin } from "@/src/core/security/csrf";
 
 const schema = z.object({
   email: z.string().email(),
@@ -11,6 +12,9 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
+  const csrf = enforceSameOrigin(request);
+  if (csrf) return csrf;
+
   const body = await request.json().catch(() => null);
   const parsed = schema.safeParse(body);
 
@@ -30,6 +34,13 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: { code: "INVALID_CREDENTIALS", message: "Credenziali non valide." } },
       { status: 401 }
+    );
+  }
+
+  if (user.isDisabled) {
+    return NextResponse.json(
+      { error: { code: "USER_DISABLED", message: "Account disabilitato." } },
+      { status: 403 }
     );
   }
 

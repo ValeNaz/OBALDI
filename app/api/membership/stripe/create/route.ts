@@ -3,6 +3,8 @@ import { z } from "zod";
 import { prisma } from "@/src/core/db";
 import { getAppBaseUrl } from "@/src/core/config";
 import { getStripeClient, getStripePriceId } from "@/src/core/payments/stripe";
+import { getClientIp, rateLimit } from "@/src/core/security/rate-limit";
+import { enforceSameOrigin } from "@/src/core/security/csrf";
 
 const schema = z.object({
   planCode: z.enum(["ACCESSO", "TUTELA"]),
@@ -10,6 +12,24 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
+  const csrf = enforceSameOrigin(request);
+  if (csrf) return csrf;
+
+  const ip = getClientIp(request);
+  const limiter = rateLimit({
+    key: `membership:stripe:${ip}`,
+    limit: 5,
+    windowMs: 5 * 60 * 1000
+  });
+
+  if (!limiter.allowed) {
+    const retryAfter = Math.ceil((limiter.resetAt - Date.now()) / 1000);
+    return NextResponse.json(
+      { error: { code: "RATE_LIMITED", message: "Too many requests." } },
+      { status: 429, headers: { "Retry-After": String(retryAfter) } }
+    );
+  }
+
   const body = await request.json().catch(() => null);
   const parsed = schema.safeParse(body);
 

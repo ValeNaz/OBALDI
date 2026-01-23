@@ -5,6 +5,8 @@ import { AuthError, requireSession } from "@/src/core/auth/guard";
 import { requireActiveMembership } from "@/src/core/membership/guard";
 import { getAppBaseUrl } from "@/src/core/config";
 import { getStripeClient } from "@/src/core/payments/stripe";
+import { getClientIp, rateLimit } from "@/src/core/security/rate-limit";
+import { enforceSameOrigin } from "@/src/core/security/csrf";
 
 const schema = z.object({
   productId: z.string().uuid(),
@@ -12,6 +14,24 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
+  const csrf = enforceSameOrigin(request);
+  if (csrf) return csrf;
+
+  const ip = getClientIp(request);
+  const limiter = rateLimit({
+    key: `checkout:order:${ip}`,
+    limit: 10,
+    windowMs: 60 * 1000
+  });
+
+  if (!limiter.allowed) {
+    const retryAfter = Math.ceil((limiter.resetAt - Date.now()) / 1000);
+    return NextResponse.json(
+      { error: { code: "RATE_LIMITED", message: "Too many requests." } },
+      { status: 429, headers: { "Retry-After": String(retryAfter) } }
+    );
+  }
+
   const body = await request.json().catch(() => null);
   const parsed = schema.safeParse(body);
 
@@ -23,9 +43,10 @@ export async function POST(request: Request) {
   }
 
   let session;
+  let membership;
   try {
     session = await requireSession();
-    await requireActiveMembership(session.user.id);
+    membership = await requireActiveMembership(session.user.id);
   } catch (error) {
     if (error instanceof AuthError) {
       return NextResponse.json(
@@ -51,6 +72,13 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: { code: "OUT_OF_STOCK", message: "Product out of stock." } },
       { status: 400 }
+    );
+  }
+
+  if (product.premiumOnly && membership.plan.code !== "TUTELA") {
+    return NextResponse.json(
+      { error: { code: "PREMIUM_ONLY", message: "Premium membership required." } },
+      { status: 403 }
     );
   }
 
