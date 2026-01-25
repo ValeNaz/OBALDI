@@ -8,6 +8,10 @@ type ProfileData = {
     id: string;
     email: string;
     role: string;
+    firstName: string | null;
+    lastName: string | null;
+    phone: string | null;
+    bio: string | null;
   };
   membership: {
     status: string;
@@ -42,6 +46,13 @@ export default function ProfilePage() {
   const [assistUrl, setAssistUrl] = useState("");
   const [assistNotes, setAssistNotes] = useState("");
   const [assistSubmitting, setAssistSubmitting] = useState(false);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [profileSuccess, setProfileSuccess] = useState<string | null>(null);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [bio, setBio] = useState("");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -55,6 +66,10 @@ export default function ProfilePage() {
         }
         const payload = await response.json();
         setData(payload);
+        setFirstName(payload.user.firstName || "");
+        setLastName(payload.user.lastName || "");
+        setPhone(payload.user.phone || "");
+        setBio(payload.user.bio || "");
       } catch {
         setError("Impossibile caricare il profilo.");
       }
@@ -111,6 +126,35 @@ export default function ProfilePage() {
   }
 
   const membership = data.membership;
+
+  const handleProfileSave = async () => {
+    setProfileError(null);
+    setProfileSuccess(null);
+    setProfileSaving(true);
+    try {
+      const response = await fetch("/api/me/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          phone,
+          bio
+        })
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        setProfileError(payload?.error?.message ?? "Impossibile aggiornare il profilo.");
+        return;
+      }
+      setProfileSuccess("Profilo aggiornato con successo.");
+      setData(prev => prev ? { ...prev, user: { ...prev.user, firstName, lastName, phone, bio } } : null);
+    } catch {
+      setProfileError("Errore di connessione.");
+    } finally {
+      setProfileSaving(false);
+    }
+  };
 
   const handlePasswordSave = async () => {
     setPasswordError(null);
@@ -191,17 +235,79 @@ export default function ProfilePage() {
 
       <div className="grid lg:grid-cols-3 gap-8">
         <div className="glass-card card-pad lg:col-span-2">
-          <h2 className="text-xl font-bold text-[#0b224e] mb-4">Profilo</h2>
-          <div className="space-y-3 text-sm text-slate-600">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-bold text-[#0b224e]">Informazioni Personali</h2>
+            <button
+              onClick={handleProfileSave}
+              disabled={profileSaving}
+              className="text-sm font-bold text-[#0b224e] hover:underline disabled:opacity-50"
+            >
+              {profileSaving ? "Salvataggio..." : "Salva modifiche"}
+            </button>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <span className="text-xs uppercase tracking-widest text-slate-400">Email</span>
-              <p className="font-semibold text-slate-700">{data.user.email}</p>
+              <label className="block text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-1">Nome</label>
+              <input
+                type="text"
+                className="glass-input w-full py-2"
+                placeholder="Il tuo nome"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+              />
             </div>
             <div>
-              <span className="text-xs uppercase tracking-widest text-slate-400">Ruolo</span>
-              <p className="font-semibold text-slate-700">{data.user.role}</p>
+              <label className="block text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-1">Cognome</label>
+              <input
+                type="text"
+                className="glass-input w-full py-2"
+                placeholder="Il tuo cognome"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-1">Telefono</label>
+              <input
+                type="tel"
+                className="glass-input w-full py-2"
+                placeholder="+39..."
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-1">Email (Non modificabile)</label>
+              <input
+                disabled
+                type="email"
+                className="glass-input w-full py-2 opacity-50 cursor-not-allowed"
+                value={data.user.email}
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-1">Biografia / Note</label>
+              <textarea
+                rows={3}
+                className="glass-input w-full py-2"
+                placeholder="Qualcosa su di te..."
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+              />
             </div>
           </div>
+
+          {profileError && (
+            <div className="mt-4 text-xs text-red-600 font-semibold bg-red-50 border border-red-100 rounded-xl px-4 py-2">
+              {profileError}
+            </div>
+          )}
+          {profileSuccess && (
+            <div className="mt-4 text-xs text-green-700 font-semibold bg-green-50 border border-green-100 rounded-xl px-4 py-2">
+              {profileSuccess}
+            </div>
+          )}
         </div>
 
         <div className="glass-card card-pad">
@@ -362,8 +468,8 @@ export default function ProfilePage() {
                             {request.status === "OPEN"
                               ? "Aperta"
                               : request.status === "IN_REVIEW"
-                              ? "In revisione"
-                              : "Completata"}
+                                ? "In revisione"
+                                : "Completata"}
                           </span>
                         </div>
                         {request.outcome && (

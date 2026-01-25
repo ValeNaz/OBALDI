@@ -1,10 +1,10 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "../context/UserContext";
 import CategoryNavRow from "@/components/home/CategoryNavRow";
 import { categories } from "@/lib/homeData";
@@ -13,24 +13,41 @@ import CartDropdown from "@/components/CartDropdown";
 const Header = () => {
   const { user, points, logout } = useUser();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const pathname = usePathname();
   const isMarketplace = pathname?.startsWith("/marketplace");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState("ALL");
+
+  useEffect(() => {
+    if (isMarketplace) {
+      const cat = new URLSearchParams(window.location.search).get("cat");
+      setSelectedCategory(cat || "ALL");
+    }
+  }, [isMarketplace, searchParams]);
 
   const handleLogout = async () => {
     await logout();
     router.push("/");
   };
 
+  const handleCategoryChangeInSearch = (catId: string) => {
+    setSelectedCategory(catId);
+    if (isMarketplace) {
+      const params = new URLSearchParams(window.location.search);
+      if (catId === "ALL") params.delete("cat");
+      else params.set("cat", catId);
+      router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    }
+  };
+
   const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const query = searchQuery.trim();
-    if (!query) {
-      router.push("/marketplace");
-      return;
-    }
-    router.push(`/marketplace?query=${encodeURIComponent(query)}&cat=${selectedCategory}`);
+    const params = new URLSearchParams();
+    if (query) params.set("query", query);
+    if (selectedCategory !== "ALL") params.set("cat", selectedCategory);
+    router.push(`/marketplace?${params.toString()}`);
   };
 
   if (!isMarketplace) {
@@ -41,7 +58,7 @@ const Header = () => {
             <nav className="flex items-center space-x-8">
               <Link
                 href="/"
-                className="flex items-center hover:opacity-80 transition-opacity"
+                className="flex items-center hover:opacity-80 transition-opacity flex-shrink-0"
                 aria-label="Obaldi"
               >
                 <Image
@@ -49,7 +66,7 @@ const Header = () => {
                   alt="Obaldi"
                   width={160}
                   height={40}
-                  className="h-10 w-auto"
+                  className="h-10 w-auto object-contain"
                 />
               </Link>
               <div className="hidden md:flex items-center space-x-2">
@@ -125,7 +142,7 @@ const Header = () => {
               <div className="flex items-center gap-4">
                 <Link
                   href="/"
-                  className="flex items-center hover:opacity-80 transition-opacity"
+                  className="flex items-center hover:opacity-80 transition-opacity flex-shrink-0"
                   aria-label="Obaldi"
                 >
                   <Image
@@ -133,13 +150,9 @@ const Header = () => {
                     alt="Obaldi"
                     width={160}
                     height={40}
-                    className="h-10 w-auto"
+                    className="h-10 w-auto object-contain"
                   />
                 </Link>
-                <div className="hidden xl:flex flex-col text-xs text-slate-500">
-                  <span>Consegna a</span>
-                  <span className="font-semibold text-slate-700">Italia</span>
-                </div>
               </div>
 
               <form
@@ -153,11 +166,11 @@ const Header = () => {
                 <select
                   id="marketplace-category"
                   value={selectedCategory}
-                  onChange={(event) => setSelectedCategory(event.target.value)}
+                  onChange={(event) => handleCategoryChangeInSearch(event.target.value)}
                   className="rounded-xl bg-white/80 px-3 text-xs font-semibold text-slate-600 outline-none"
                   aria-label="Seleziona categoria"
                 >
-                  <option value="all">Tutte le categorie</option>
+                  <option value="ALL">Tutte le categorie</option>
                   {categories.map((category) => (
                     <option key={category.id} value={category.id}>
                       {category.label}

@@ -1,329 +1,197 @@
 "use client";
 
-import { useState } from "react";
-
-type CreatedProduct = {
-  id: string;
-  title: string;
-  priceCents: number;
-};
-
-type UploadedMedia = {
-  id: string;
-  url: string;
-  type: "IMAGE" | "VIDEO";
-  sortOrder: number;
-};
+import { useState, useEffect } from "react";
+import ProductForm from "@/components/dashboard/ProductForm";
 
 const SellerDashboard = () => {
-  const [submitted, setSubmitted] = useState(false);
+  const [activeTab, setActiveTab] = useState<"list" | "create">("list");
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [created, setCreated] = useState<CreatedProduct | null>(null);
-  const [mediaItems, setMediaItems] = useState<UploadedMedia[]>([]);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [form, setForm] = useState({
-    title: "",
-    description: "",
-    price: "",
-    premiumOnly: false,
-    pointsEligible: false,
-    pointsPrice: "",
-    specsJson: '{"format":"pdf"}'
-  });
 
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
-    setError(null);
+  const [editingProduct, setEditingProduct] = useState<any | null>(null);
+  const [showProductForm, setShowProductForm] = useState(false);
 
-    let specs: Record<string, unknown>;
-    try {
-      specs = JSON.parse(form.specsJson || "{}");
-    } catch {
-      setError("Specifiche non valide: inserisci JSON corretto.");
-      return;
-    }
-
-    const priceNumber = Number(form.price);
-    if (!priceNumber || priceNumber <= 0) {
-      setError("Inserisci un prezzo valido.");
-      return;
-    }
-
-    const pointsPriceNumber = form.pointsEligible ? Number(form.pointsPrice) : null;
-    if (form.pointsEligible && (!pointsPriceNumber || pointsPriceNumber <= 0)) {
-      setError("Inserisci un prezzo punti valido.");
-      return;
-    }
-
-    const payload = {
-      title: form.title.trim(),
-      description: form.description.trim(),
-      specsJson: specs,
-      priceCents: Math.round(priceNumber * 100),
-      currency: "EUR",
-      premiumOnly: form.premiumOnly,
-      pointsEligible: form.pointsEligible,
-      pointsPrice: form.pointsEligible ? pointsPriceNumber ?? undefined : undefined
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      const res = await fetch("/api/seller/products");
+      if (res.ok) {
+        const data = await res.json();
+        setProducts(data.products ?? []);
+      } else {
+        setError("Impossibile caricare i prodotti.");
+      }
+      setLoading(false);
     };
+    load();
+  }, []);
 
-    const createProduct = async () => {
-      const response = await fetch("/api/seller/products", {
-        method: "POST",
+  const handleProductSubmit = async (data: any) => {
+    const isEdit = !!data.id;
+    const url = isEdit ? `/api/seller/products/${data.id}` : "/api/seller/products";
+    const method = isEdit ? "PATCH" : "POST";
+
+    try {
+      const requestBody = {
+        ...data,
+        specsJson: typeof data.specsJson === 'string' ? JSON.parse(data.specsJson || '{}') : data.specsJson
+      };
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(requestBody)
       });
 
-      if (!response.ok) {
-        setError("Errore durante la creazione del prodotto.");
+      if (!res.ok) {
+        const err = await res.json();
+        alert("Errore: " + (err.error?.message ?? "generico"));
         return;
       }
 
-      const data = await response.json();
-      setCreated({
-        id: data.product.id,
-        title: data.product.title,
-        priceCents: data.product.priceCents
-      });
-      setSubmitted(false);
-    };
+      const payload = await res.json();
+      const savedProduct = payload.product;
 
-    createProduct();
-  };
-
-  const handleSubmitForReview = async () => {
-    if (!created) return;
-    const response = await fetch(`/api/seller/products/${created.id}/submit`, {
-      method: "POST"
-    });
-
-    if (!response.ok) {
-      setError("Errore durante l'invio per revisione.");
-      return;
-    }
-
-    setError(null);
-    setSubmitted(true);
-  };
-
-  const handleMediaUpload = async (files: FileList | null) => {
-    if (!files || !created) return;
-    setUploadError(null);
-    setUploading(true);
-    const uploads = Array.from(files);
-
-    for (const file of uploads) {
-      const mediaType = file.type.startsWith("video/") ? "VIDEO" : "IMAGE";
-      try {
-        const presignResponse = await fetch("/api/seller/media/presign", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            productId: created.id,
-            fileName: file.name,
-            contentType: file.type,
-            sizeBytes: file.size,
-            mediaType
-          })
-        });
-
-        const presignPayload = await presignResponse.json().catch(() => null);
-        if (!presignResponse.ok) {
-          setUploadError(presignPayload?.error?.message ?? "Errore durante l'upload.");
-          continue;
-        }
-
-        const uploadResult = await fetch(presignPayload.uploadUrl, {
-          method: "PUT",
-          headers: {
-            "Content-Type": file.type,
-            "x-upsert": "true"
-          },
-          body: file
-        });
-
-        if (!uploadResult.ok) {
-          setUploadError("Impossibile caricare il file. Riprova.");
-          continue;
-        }
-
-        setMediaItems((prev) =>
-          [...prev, presignPayload.media].sort((a, b) => a.sortOrder - b.sortOrder)
-        );
-      } catch {
-        setUploadError("Impossibile caricare il file. Riprova.");
+      if (isEdit) {
+        setProducts(prev => prev.map(p => p.id === savedProduct.id ? savedProduct : p));
+      } else {
+        setProducts(prev => [savedProduct, ...prev]);
       }
+      return savedProduct;
+    } catch {
+      alert("Errore di connessione");
     }
+  };
 
-    setUploading(false);
+  const handleDelete = async (id: string) => {
+    if (!confirm("Eliminare definitivamente questo prodotto?")) return;
+    try {
+      const res = await fetch(`/api/seller/products/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setProducts(prev => prev.filter(p => p.id !== id));
+      } else {
+        alert("Impossibile eliminare.");
+      }
+    } catch {
+      alert("Errore di connessione");
+    }
   };
 
   return (
     <div className="container-max page-pad pt-28 md:pt-32 pb-16">
-      <h1 className="text-3xl md:text-4xl font-display font-bold text-[#0b224e] mb-8">Dashboard Venditore</h1>
+      <div className="flex justify-between items-center mb-12">
+        <h1 className="text-3xl md:text-4xl font-display font-bold text-[#0b224e]">Dashboard Venditore</h1>
+        <button
+          onClick={() => { setEditingProduct(null); setShowProductForm(true); }}
+          className="bg-[#0b224e] text-white px-6 py-2 rounded-full font-bold shadow-glow-soft hover:shadow-lg transition"
+        >
+          + Nuovo Prodotto
+        </button>
+      </div>
 
-      {submitted ? (
-        <div className="glass-panel p-8 text-center">
-          <h2 className="text-xl font-bold mb-2 text-[#0b224e]">Prodotto inviato per revisione</h2>
-          <p className="text-sm">
-            Il team Obaldi analizzerà la tua proposta. Riceverai una notifica ad approvazione completata.
-          </p>
-          <button
-            onClick={() => {
-              setSubmitted(false);
-              setCreated(null);
-            }}
-            className="mt-6 text-sm font-bold underline text-[#0b224e]"
-          >
-            Inserisci un altro prodotto
-          </button>
-          {created && (
-            <div className="mt-4 text-xs text-green-700">
-              ID prodotto: {created.id}
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="glass-card card-pad">
-          <h2 className="text-xl font-bold mb-6 text-[#0b224e]">Proponi nuovo prodotto</h2>
-          {error && <p className="mb-4 text-sm text-red-600 font-semibold">{error}</p>}
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Nome Prodotto</label>
-                <input
-                  required
-                  type="text"
-                  className="glass-input w-full"
-                  placeholder="Esempio: Token hardware"
-                  value={form.title}
-                  onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Prezzo (€)</label>
-                <input
-                  required
-                  type="number"
-                  step="0.01"
-                  className="glass-input w-full"
-                  placeholder="0.00"
-                  value={form.price}
-                  onChange={(event) => setForm((prev) => ({ ...prev, price: event.target.value }))}
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2">Descrizione Dettagliata</label>
-              <textarea
-                required
-                rows={4}
-                className="glass-input w-full"
-                placeholder="Descrivi il prodotto, la sua utilità e come tutela l'utente..."
-                value={form.description}
-                onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2">Specifiche (JSON)</label>
-              <textarea
-                rows={3}
-                className="glass-input w-full font-mono text-xs"
-                value={form.specsJson}
-                onChange={(event) => setForm((prev) => ({ ...prev, specsJson: event.target.value }))}
-              />
-            </div>
-            <div className="grid md:grid-cols-2 gap-6">
-              <label className="flex items-center gap-3 text-sm font-bold text-slate-700">
-                <input
-                  type="checkbox"
-                  checked={form.premiumOnly}
-                  onChange={(event) =>
-                    setForm((prev) => ({ ...prev, premiumOnly: event.target.checked }))
-                  }
-                />
-                Solo per Premium (Tutela)
-              </label>
-              <label className="flex items-center gap-3 text-sm font-bold text-slate-700">
-                <input
-                  type="checkbox"
-                  checked={form.pointsEligible}
-                  onChange={(event) =>
-                    setForm((prev) => ({ ...prev, pointsEligible: event.target.checked }))
-                  }
-                />
-                Abilita pagamento con punti
-              </label>
-              {form.pointsEligible && (
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">Punti massimi utilizzabili</label>
-                  <input
-                    type="number"
-                    className="glass-input w-full"
-                    value={form.pointsPrice}
-                    onChange={(event) => setForm((prev) => ({ ...prev, pointsPrice: event.target.value }))}
-                  />
-                </div>
-              )}
-            </div>
-            <div className="border-t pt-6 flex justify-between items-center">
-              <p className="text-xs text-slate-400 max-w-xs">
-                Il prodotto non sarà visibile finché non verrà approvato da un amministratore Obaldi.
-              </p>
-              <button type="submit" className="bg-[#0b224e] text-white px-8 py-3 rounded-full font-bold shadow-glow-soft">
-                Invia per Revisione
-              </button>
-            </div>
-          </form>
+      {error && (
+        <div className="bg-red-50 text-red-600 p-4 rounded-xl mb-8 font-semibold">
+          {error}
         </div>
       )}
-      {created && !submitted && (
-        <div className="mt-6 space-y-4">
-          <div className="glass-panel p-6 flex items-center justify-between">
-            <div>
-              <p className="text-sm font-bold text-[#0b224e]">Prodotto creato: {created.title}</p>
-              <p className="text-xs text-slate-500">€{(created.priceCents / 100).toFixed(2)}</p>
-            </div>
-            <button
-              onClick={handleSubmitForReview}
-              className="bg-[#0b224e] text-white px-6 py-2 rounded-full text-sm font-bold shadow-glow-soft"
-            >
-              Invia per revisione
-            </button>
-          </div>
-          <div className="glass-panel p-6">
-            <h3 className="text-sm font-bold text-[#0b224e] mb-3">Carica immagini o video</h3>
-            <p className="text-xs text-slate-500 mb-4">
-              Formati supportati: JPG, PNG, WEBP, MP4. Dimensione max 10MB (immagini) / 100MB (video).
-            </p>
-            {uploadError && <p className="text-xs text-red-600 font-semibold mb-3">{uploadError}</p>}
-            <input
-              type="file"
-              multiple
-              accept="image/jpeg,image/png,image/webp,video/mp4,video/webm"
-              disabled={uploading}
-              onChange={(event) => handleMediaUpload(event.target.files)}
-              className="text-sm"
-            />
-            {mediaItems.length > 0 && (
-              <div className="mt-4 grid grid-cols-4 gap-3">
-                {mediaItems.map((media) => (
-                  <div key={media.id} className="aspect-square glass-panel overflow-hidden">
-                    {media.type === "VIDEO" ? (
-                      <video
-                        src={media.url}
-                        muted
-                        playsInline
-                        preload="metadata"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <img src={media.url} alt="" className="w-full h-full object-cover" />
-                    )}
-                  </div>
-                ))}
+
+      {loading ? (
+        <div className="text-center py-12 text-slate-400">Caricamento prodotti...</div>
+      ) : products.length === 0 ? (
+        <div className="text-center py-20 bg-slate-50 rounded-2xl border border-slate-100">
+          <p className="text-slate-500 mb-4">Non hai ancora inserito prodotti.</p>
+          <button
+            onClick={() => { setEditingProduct(null); setShowProductForm(true); }}
+            className="text-[#0b224e] font-bold underline"
+          >
+            Inizia ora
+          </button>
+        </div>
+      ) : (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {products.map(product => (
+            <div key={product.id} className="glass-panel p-6 flex flex-col group">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="font-bold text-[#0b224e] text-lg leading-tight">{product.title}</h3>
+                <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded ${product.status === "APPROVED" ? "bg-green-100 text-green-700" :
+                  product.status === "PENDING" ? "bg-yellow-100 text-yellow-700" :
+                    "bg-slate-100 text-slate-500"
+                  }`}>
+                  {product.status}
+                </span>
               </div>
-            )}
+              <div className="mb-4 text-slate-500 text-sm flex-grow line-clamp-3">
+                {product.description}
+              </div>
+              <div className="flex justify-between items-center mt-auto pt-4 border-t border-slate-100">
+                <span className="font-bold text-[#0b224e]">€{(product.priceCents / 100).toFixed(2)}</span>
+                <div className="flex gap-3 text-sm font-bold">
+                  <button
+                    onClick={() => { setEditingProduct(product); setShowProductForm(true); }}
+                    className="text-slate-500 hover:text-[#0b224e]"
+                  >
+                    Modifica
+                  </button>
+                  {product.status === "DRAFT" || product.status === "REJECTED" ? (
+                    <button
+                      onClick={async () => {
+                        if (!confirm("Inviare per la revisione?")) return;
+                        const res = await fetch(`/api/seller/products/${product.id}/submit`, { method: "POST" });
+                        if (res.ok) {
+                          alert("Prodotto inviato!");
+                          setProducts(prev => prev.map(p => p.id === product.id ? { ...p, status: "PENDING" } : p));
+                        } else {
+                          alert("Errore invio.");
+                        }
+                      }}
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      Invia
+                    </button>
+                  ) : null}
+                  <button
+                    onClick={() => handleDelete(product.id)}
+                    className="text-red-400 hover:text-red-700"
+                  >
+                    Elimina
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {showProductForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            <ProductForm
+              role="SELLER"
+              initialData={editingProduct ? {
+                id: editingProduct.id,
+                title: editingProduct.title,
+                description: editingProduct.description,
+                priceCents: editingProduct.priceCents,
+                premiumOnly: editingProduct.premiumOnly,
+                pointsEligible: editingProduct.pointsEligible,
+                pointsPrice: editingProduct.pointsPrice,
+                specsJson: typeof editingProduct.specsJson === 'string' ? editingProduct.specsJson : JSON.stringify(editingProduct.specsJson),
+                images: editingProduct.media
+              } : undefined}
+              onSubmit={async (data) => {
+                const saved = await handleProductSubmit(data);
+                if (saved) {
+                  setEditingProduct(saved);
+                  alert("Prodotto salvato correttamente!");
+                  if (editingProduct) { // If it was an edit, close the form? user might want to keep adding images.
+                    // Let's decide: if Create -> Keep open. If Update -> Close.
+                    // Actually, let's keep it open but show alert.
+                  }
+                }
+              }}
+              onCancel={() => setShowProductForm(false)}
+            />
           </div>
         </div>
       )}

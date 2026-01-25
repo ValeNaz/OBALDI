@@ -7,6 +7,10 @@ export interface User {
   role: Role;
   isMember: boolean;
   isPremium: boolean;
+  firstName?: string | null;
+  lastName?: string | null;
+  phone?: string | null;
+  bio?: string | null;
   membershipExpiresAt?: string;
 }
 

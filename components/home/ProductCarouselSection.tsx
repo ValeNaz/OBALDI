@@ -3,14 +3,17 @@ import type { CarouselSection } from "@/lib/homeData";
 import HorizontalScroller from "@/components/home/HorizontalScroller";
 import ProductCard from "@/components/home/ProductCard";
 
+import { cn } from "@/lib/utils";
+
 type ProductCarouselSectionProps = {
   section: CarouselSection;
   isLoading?: boolean;
+  className?: string;
 };
 
-const ProductCarouselSection = ({ section, isLoading = false }: ProductCarouselSectionProps) => {
+const ProductCarouselSection = ({ section, isLoading = false, className }: ProductCarouselSectionProps) => {
   return (
-    <section className="section-pad">
+    <section className={cn("section-pad", className)}>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
           <h2 className="text-2xl font-semibold text-[#0b224e]">{section.title}</h2>

@@ -8,12 +8,16 @@ export type Product = {
   id: string;
   title: string;
   image: string;
+  description?: string;
   priceCents?: number;
   currency?: string;
   rating?: number;
   ratingCount?: number;
   badge?: string;
   shippingNote?: string;
+  premiumOnly?: boolean;
+  pointsEligible?: boolean;
+  pointsPrice?: number | null;
 };
 
 export type HeroSlide = {
@@ -75,14 +79,12 @@ const makeProduct = (id: number, title: string, priceCents?: number): Product =>
 });
 
 export const categories: Category[] = [
-  { id: "cat-1", label: "Tecnologia", href: "/marketplace" },
-  { id: "cat-2", label: "Casa e cucina", href: "/marketplace" },
-  { id: "cat-3", label: "Sport e benessere", href: "/marketplace" },
-  { id: "cat-4", label: "Smart living", href: "/marketplace" },
-  { id: "cat-5", label: "Audio e video", href: "/marketplace" },
-  { id: "cat-6", label: "Viaggio", href: "/marketplace" },
-  { id: "cat-7", label: "Accessori", href: "/marketplace" },
-  { id: "cat-8", label: "Ufficio", href: "/marketplace" }
+  { id: "ELECTRONICS", label: "Tecnologia", href: "/marketplace" },
+  { id: "HOME", label: "Casa e cucina", href: "/marketplace" },
+  { id: "SPORTS", label: "Sport e benessere", href: "/marketplace" },
+  { id: "FASHION", label: "Moda", href: "/marketplace" },
+  { id: "BEAUTY", label: "Bellezza", href: "/marketplace" },
+  { id: "OTHER", label: "Altro", href: "/marketplace" }
 ];
 
 export const heroSlides: HeroSlide[] = [

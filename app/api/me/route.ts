@@ -12,7 +12,7 @@ export async function GET() {
     );
   }
 
-  const session = await getSessionByToken(token);
+  const session = await getSessionByToken(token) as any;
   if (!session) {
     return NextResponse.json(
       { error: { code: "UNAUTHORIZED", message: "Session invalid or expired." } },
@@ -23,11 +23,11 @@ export async function GET() {
   const { user } = session;
   const membership = user.membership
     ? {
-        status: user.membership.status,
-        planCode: user.membership.plan.code,
-        currentPeriodEnd: user.membership.currentPeriodEnd,
-        autoRenew: user.membership.autoRenew
-      }
+      status: user.membership.status,
+      planCode: user.membership.plan.code,
+      currentPeriodEnd: user.membership.currentPeriodEnd,
+      autoRenew: user.membership.autoRenew
+    }
     : null;
 
   const pointsBalance = await getPointsBalance(user.id);
@@ -36,7 +36,12 @@ export async function GET() {
     user: {
       id: user.id,
       email: user.email,
-      role: user.role
+      role: user.role,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      phone: user.phone,
+      bio: user.bio,
+      avatarUrl: user.avatarUrl
     },
     membership,
     pointsBalance

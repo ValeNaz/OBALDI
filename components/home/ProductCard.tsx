@@ -15,9 +15,14 @@ const ProductCard = ({ product, variant }: ProductCardProps) => {
       ? `${currencySymbol}${(product.priceCents / 100).toFixed(2)}`
       : null;
 
+  // Support both homeData products (prod-1) and API products (UUIDs)
+  const productHref = product.id.startsWith("prod-")
+    ? "/marketplace"
+    : `/product/${product.id}`;
+
   return (
     <Link
-      href="/marketplace"
+      href={productHref}
       className={cn(
         "group glass-panel overflow-hidden border border-white/60 bg-white/70 transition",
         "hover:-translate-y-1 hover:shadow-glow-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b224e]/30",
@@ -32,9 +37,14 @@ const ProductCard = ({ product, variant }: ProductCardProps) => {
           sizes="(max-width: 768px) 60vw, 20vw"
           className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
         />
-        {product.badge && (
-          <span className="absolute left-3 top-3 rounded-full bg-[#0b224e] px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-white">
-            {product.badge}
+        {(product.badge || product.premiumOnly) && (
+          <span
+            className={cn(
+              "absolute left-3 top-3 rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-white",
+              product.premiumOnly ? "bg-[#a41f2e]" : "bg-[#0b224e]"
+            )}
+          >
+            {product.premiumOnly ? "Solo Premium" : product.badge}
           </span>
         )}
       </div>
@@ -60,10 +70,17 @@ const ProductCard = ({ product, variant }: ProductCardProps) => {
             <span>({product.ratingCount ?? 0})</span>
           </div>
         )}
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-bold text-[#0b224e]">{price ?? "—"}</span>
+        <div className="flex items-end justify-between">
+          <div className="flex flex-col">
+            <span className="text-sm font-bold text-[#0b224e]">{price ?? "—"}</span>
+            {product.pointsEligible && product.pointsPrice && (
+              <span className="text-[10px] font-medium text-slate-500">
+                🪙 {product.pointsPrice} punti
+              </span>
+            )}
+          </div>
           {product.shippingNote && (
-            <span className="text-[10px] uppercase tracking-wider text-slate-400">
+            <span className="text-[10px] uppercase tracking-wider text-slate-400 mb-0.5">
               {product.shippingNote}
             </span>
           )}

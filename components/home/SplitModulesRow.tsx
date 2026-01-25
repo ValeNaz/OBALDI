@@ -2,14 +2,17 @@ import Image from "next/image";
 import Link from "next/link";
 import type { SplitModule } from "@/lib/homeData";
 
+import { cn } from "@/lib/utils";
+
 type SplitModulesRowProps = {
   featured: SplitModule;
   side: SplitModule[];
+  className?: string;
 };
 
-const SplitModulesRow = ({ featured, side }: SplitModulesRowProps) => {
+const SplitModulesRow = ({ featured, side, className }: SplitModulesRowProps) => {
   return (
-    <section className="section-pad">
+    <section className={cn("section-pad", className)}>
       <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
         <div className="glass-panel p-6 flex flex-col gap-4">
           <div className="relative aspect-[16/9] rounded-2xl overflow-hidden">

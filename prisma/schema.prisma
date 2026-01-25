@@ -73,6 +73,15 @@ enum ProductMediaType {
   VIDEO
 }
 
+enum ProductCategory {
+  ELECTRONICS
+  HOME
+  FASHION
+  BEAUTY
+  SPORTS
+  OTHER
+}
+
 enum ChangeRequestStatus {
   PENDING
   APPROVED
@@ -113,6 +122,11 @@ model User {
   emailVerifiedAt DateTime? @db.Timestamptz(6)
   passwordHash    String?
   role            UserRole
+  firstName       String?
+  lastName        String?
+  phone           String?
+  bio             String?
+  avatarUrl       String?
   isDisabled      Boolean   @default(false)
   createdAt       DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
@@ -243,6 +257,14 @@ model Product {
   premiumOnly    Boolean       @default(false)
   pointsEligible Boolean       @default(false)
   pointsPrice    Int?
+  category       ProductCategory @default(OTHER)
+  isFeatured     Boolean         @default(false)
+  isHero         Boolean         @default(false)
+  isPromo        Boolean         @default(false)
+  isSplit        Boolean         @default(false)
+  isCarousel     Boolean         @default(false)
+  isCollection   Boolean         @default(false)
+  adminTag       String?
   createdAt      DateTime      @default(now()) @db.Timestamptz(6)
   updatedAt      DateTime      @updatedAt @db.Timestamptz(6)
 
@@ -385,4 +407,15 @@ model WebhookEvent {
   createdAt  DateTime  @default(now()) @db.Timestamptz(6)
 
   @@map("webhook_events")
+}
+
+model ProductView {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String?  @db.Uuid
+  productId String   @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([userId, createdAt])
+  @@index([productId])
+  @@map("product_views")
 }

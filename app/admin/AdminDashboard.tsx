@@ -97,10 +97,16 @@ type AdminUser = {
   createdAt: string;
 };
 
+// ... (imports)
+import ProductForm from "@/components/dashboard/ProductForm";
+
+// ... (existing types)
+
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState<
-    "products" | "changes" | "assist" | "orders" | "audit" | "news" | "users"
+    "products" | "catalog" | "changes" | "assist" | "orders" | "audit" | "news" | "users"
   >("products");
+
   const [pending, setPending] = useState<PendingProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -138,6 +144,97 @@ const AdminDashboard = () => {
   const [usersLoading, setUsersLoading] = useState(false);
   const [usersError, setUsersError] = useState<string | null>(null);
 
+  // Catalog State
+  const [catalogProducts, setCatalogProducts] = useState<any[]>([]); // Use appropriate type if available or cast
+  const [catalogLoading, setCatalogLoading] = useState(false);
+  const [catalogError, setCatalogError] = useState<string | null>(null);
+
+  // Modal State
+  const [editingProduct, setEditingProduct] = useState<any | null>(null); // If null but showForm is true -> Create mode
+  const [showProductForm, setShowProductForm] = useState(false);
+
+  // ... (existing useEffects)
+
+  // Load Catalog
+  useEffect(() => {
+    if (activeTab !== "catalog") return;
+    const controller = new AbortController();
+    const load = async () => {
+      setCatalogLoading(true);
+      const res = await fetch("/api/admin/products?status=ALL", { signal: controller.signal });
+      if (res.ok) {
+        const data = await res.json();
+        setCatalogProducts(data.products ?? []);
+      } else {
+        setCatalogError("Errore caricamento catalogo.");
+      }
+      setCatalogLoading(false);
+    };
+    load();
+    return () => controller.abort();
+  }, [activeTab]);
+
+  const handleProductSubmit = async (data: any) => {
+    // decide URL and Method
+    const isEdit = !!data.id;
+    const url = isEdit ? `/api/admin/products/${data.id}` : "/api/admin/products";
+    const method = isEdit ? "PATCH" : "POST";
+
+    try {
+      const requestBody = {
+        ...data,
+        specsJson: typeof data.specsJson === 'string' ? JSON.parse(data.specsJson || '{}') : data.specsJson
+      };
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!res.ok) {
+        alert("Errore salvataggio prodotto");
+        return;
+      }
+
+      const payload = await res.json();
+      const savedProduct = payload.product;
+
+      // Update lists
+      if (isEdit) {
+        setCatalogProducts(prev => prev.map(p => p.id === savedProduct.id ? savedProduct : p));
+      } else {
+        setCatalogProducts(prev => [savedProduct, ...prev]);
+      }
+
+      // Return saved product to form (for ID update)
+      return savedProduct;
+    } catch (err) {
+      console.error(err);
+      alert("Errore di connessione");
+    }
+  };
+
+  const handleDeleteProduct = async (id: string) => {
+    if (!confirm("Sei sicuro di voler eliminare questo prodotto?")) return;
+    try {
+      const res = await fetch(`/api/admin/products/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setCatalogProducts(prev => prev.filter(p => p.id !== id));
+      } else {
+        const err = await res.json();
+        alert("Errore eliminazione: " + (err.error?.message ?? "generico"));
+      }
+    } catch {
+      alert("Errore di connessione");
+    }
+  };
+
+  // ... (render)
+  // Need to inject the "Catalog" tab button and the "Catalog" view content.
+  // I will use multiple replacement chunks.
+
+
   useEffect(() => {
     const controller = new AbortController();
 
@@ -148,13 +245,16 @@ const AdminDashboard = () => {
           signal: controller.signal
         });
         if (!response.ok) {
-          setError("Impossibile caricare i prodotti in coda.");
+          const payload = await response.json().catch(() => null);
+          setError(payload?.error?.message ?? `Errore ${response.status}: Impossibile caricare i prodotti.`);
           return;
         }
         const data = await response.json();
         setPending(data.products ?? []);
-      } catch {
-        setError("Impossibile caricare i prodotti in coda.");
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          setError("Impossibile caricare i prodotti in coda (Errore di rete).");
+        }
       } finally {
         setLoading(false);
       }
@@ -593,71 +693,73 @@ const AdminDashboard = () => {
         <div className="lg:col-span-1 space-y-4">
           <nav className="space-y-2 glass-panel p-4">
             <button
-              className={`w-full text-left p-3 rounded-xl font-bold ${
-                activeTab === "products"
-                  ? "bg-white/80 text-slate-900"
-                  : "hover:bg-white/60 text-slate-500"
-              }`}
+              className={`w-full text-left p-3 rounded-xl font-bold ${activeTab === "products"
+                ? "bg-white/80 text-slate-900"
+                : "hover:bg-white/60 text-slate-500"
+                }`}
               onClick={() => setActiveTab("products")}
             >
               Prodotti in coda ({pending.length})
             </button>
             <button
-              className={`w-full text-left p-3 rounded-xl font-bold ${
-                activeTab === "changes"
-                  ? "bg-white/80 text-slate-900"
-                  : "hover:bg-white/60 text-slate-500"
-              }`}
+              className={`w-full text-left p-3 rounded-xl font-bold ${activeTab === "catalog"
+                ? "bg-white/80 text-slate-900"
+                : "hover:bg-white/60 text-slate-500"
+                }`}
+              onClick={() => setActiveTab("catalog")}
+            >
+              Catalogo Completo
+            </button>
+            <button
+              className={`w-full text-left p-3 rounded-xl font-bold ${activeTab === "changes"
+                ? "bg-white/80 text-slate-900"
+                : "hover:bg-white/60 text-slate-500"
+                }`}
               onClick={() => setActiveTab("changes")}
             >
               Modifiche prodotti ({changeRequests.length})
             </button>
             <button
-              className={`w-full text-left p-3 rounded-xl font-bold ${
-                activeTab === "assist"
-                  ? "bg-white/80 text-slate-900"
-                  : "hover:bg-white/60 text-slate-500"
-              }`}
+              className={`w-full text-left p-3 rounded-xl font-bold ${activeTab === "assist"
+                ? "bg-white/80 text-slate-900"
+                : "hover:bg-white/60 text-slate-500"
+                }`}
               onClick={() => setActiveTab("assist")}
             >
               Assist richieste
             </button>
             <button
-              className={`w-full text-left p-3 rounded-xl font-bold ${
-                activeTab === "orders"
-                  ? "bg-white/80 text-slate-900"
-                  : "hover:bg-white/60 text-slate-500"
-              }`}
+              className={`w-full text-left p-3 rounded-xl font-bold ${activeTab === "orders"
+                ? "bg-white/80 text-slate-900"
+                : "hover:bg-white/60 text-slate-500"
+                }`}
               onClick={() => setActiveTab("orders")}
             >
               Ordini
             </button>
             <button
-              className={`w-full text-left p-3 rounded-xl font-bold ${
-                activeTab === "audit"
-                  ? "bg-white/80 text-slate-900"
-                  : "hover:bg-white/60 text-slate-500"
-              }`}
+              className={`w-full text-left p-3 rounded-xl font-bold ${activeTab === "audit"
+                ? "bg-white/80 text-slate-900"
+                : "hover:bg-white/60 text-slate-500"
+                }`}
               onClick={() => setActiveTab("audit")}
             >
               Audit log
             </button>
             <button
-              className={`w-full text-left p-3 rounded-xl font-bold ${
-                activeTab === "news"
-                  ? "bg-white/80 text-slate-900"
-                  : "hover:bg-white/60 text-slate-500"
-              }`}
+              className={`w-full text-left p-3 rounded-xl font-bold ${activeTab === "news"
+                ? "bg-white/80 text-slate-900"
+                : "hover:bg-white/60 text-slate-500"
+                }`}
               onClick={() => setActiveTab("news")}
             >
               News
             </button>
             <button
-              className={`w-full text-left p-3 rounded-xl font-bold ${
-                activeTab === "users"
-                  ? "bg-white/80 text-slate-900"
-                  : "hover:bg-white/60 text-slate-500"
-              }`}
+              className={`w-full text-left p-3 rounded-xl font-bold ${activeTab === "users"
+                ? "bg-white/80 text-slate-900"
+                : "hover:bg-white/60 text-slate-500"
+                }`}
               onClick={() => setActiveTab("users")}
             >
               Utenti
@@ -666,7 +768,67 @@ const AdminDashboard = () => {
         </div>
 
         <div className="lg:col-span-3">
-          {activeTab === "products" ? (
+          {activeTab === "catalog" ? (
+            <div className="glass-panel overflow-hidden">
+              <div className="p-6 border-b border-white/70 flex justify-between items-center">
+                <h2 className="font-bold text-[#0b224e]">Gestione Catalogo</h2>
+                <button
+                  onClick={() => { setEditingProduct(null); setShowProductForm(true); }}
+                  className="bg-[#0b224e] text-white px-4 py-2 rounded-full text-sm font-bold shadow-glow-soft hover:bg-[#0b224e]/90"
+                >
+                  + Nuovo Prodotto
+                </button>
+              </div>
+              {catalogError && (
+                <div className="px-6 py-4 bg-red-50 text-red-700 text-sm font-semibold">
+                  {catalogError}
+                </div>
+              )}
+              <table className="w-full text-left border-collapse">
+                <thead className="bg-white/70 text-slate-500 text-xs uppercase tracking-widest font-bold">
+                  <tr>
+                    <th className="px-6 py-4">Prodotto</th>
+                    <th className="px-6 py-4">Stato</th>
+                    <th className="px-6 py-4">Prezzo</th>
+                    <th className="px-6 py-4 text-right">Azioni</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y text-sm">
+                  {catalogProducts.map((product) => (
+                    <tr key={product.id}>
+                      <td className="px-6 py-4 font-bold">{product.title}</td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-1 rounded text-xs font-bold ${product.status === "APPROVED" ? "bg-green-100 text-green-700" :
+                          product.status === "PENDING" ? "bg-yellow-100 text-yellow-700" :
+                            product.status === "REJECTED" ? "bg-red-100 text-red-700" : "bg-slate-100 text-slate-600"
+                          }`}>
+                          {product.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">€{(product.priceCents / 100).toFixed(2)}</td>
+                      <td className="px-6 py-4 text-right space-x-2">
+                        <button
+                          onClick={() => { setEditingProduct(product); setShowProductForm(true); }}
+                          className="text-slate-500 hover:text-[#0b224e] font-bold text-xs"
+                        >
+                          Modifica
+                        </button>
+                        <button
+                          onClick={() => handleDeleteProduct(product.id)}
+                          className="text-red-400 hover:text-red-700 font-bold text-xs"
+                        >
+                          Elimina
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {!catalogLoading && catalogProducts.length === 0 && (
+                    <tr><td colSpan={4} className="px-6 py-12 text-center text-slate-400">Nessun prodotto trovato.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          ) : activeTab === "products" ? (
             <div className="glass-panel overflow-hidden">
               {error && (
                 <div className="px-6 py-4 bg-red-50 text-red-700 text-sm font-semibold">
@@ -689,6 +851,12 @@ const AdminDashboard = () => {
                       <td className="px-6 py-4">{product.sellerId}</td>
                       <td className="px-6 py-4">€{(product.priceCents / 100).toFixed(2)}</td>
                       <td className="px-6 py-4 text-right space-x-2">
+                        <button
+                          className="bg-blue-600 text-white px-3 py-1.5 rounded text-xs font-bold"
+                          onClick={() => { setEditingProduct(product); setShowProductForm(true); }}
+                        >
+                          Esamina
+                        </button>
                         <button
                           className="bg-green-600 text-white px-3 py-1.5 rounded text-xs font-bold"
                           onClick={() => handleApprove(product.id)}
@@ -727,20 +895,19 @@ const AdminDashboard = () => {
                 {(["ALL", "PENDING", "APPROVED", "REJECTED"] as const).map((status) => (
                   <button
                     key={status}
-                    className={`px-4 py-2 rounded-full text-xs font-bold ${
-                      changeStatus === status
-                        ? "bg-[#0b224e] text-white"
-                        : "bg-white/70 text-slate-500"
-                    }`}
+                    className={`px-4 py-2 rounded-full text-xs font-bold ${changeStatus === status
+                      ? "bg-[#0b224e] text-white"
+                      : "bg-white/70 text-slate-500"
+                      }`}
                     onClick={() => setChangeStatus(status)}
                   >
                     {status === "ALL"
                       ? "Tutte"
                       : status === "PENDING"
-                      ? "In attesa"
-                      : status === "APPROVED"
-                      ? "Approvate"
-                      : "Respinte"}
+                        ? "In attesa"
+                        : status === "APPROVED"
+                          ? "Approvate"
+                          : "Respinte"}
                   </button>
                 ))}
               </div>
@@ -813,18 +980,17 @@ const AdminDashboard = () => {
                 {(["OPEN", "IN_REVIEW", "DONE"] as const).map((status) => (
                   <button
                     key={status}
-                    className={`px-4 py-2 rounded-full text-xs font-bold ${
-                      assistStatus === status
-                        ? "bg-[#0b224e] text-white"
-                        : "bg-white/70 text-slate-500"
-                    }`}
+                    className={`px-4 py-2 rounded-full text-xs font-bold ${assistStatus === status
+                      ? "bg-[#0b224e] text-white"
+                      : "bg-white/70 text-slate-500"
+                      }`}
                     onClick={() => setAssistStatus(status)}
                   >
                     {status === "OPEN"
                       ? "Aperte"
                       : status === "IN_REVIEW"
-                      ? "In revisione"
-                      : "Completate"}
+                        ? "In revisione"
+                        : "Completate"}
                   </button>
                 ))}
               </div>
@@ -860,8 +1026,8 @@ const AdminDashboard = () => {
                         {request.status === "OPEN"
                           ? "Aperta"
                           : request.status === "IN_REVIEW"
-                          ? "In revisione"
-                          : "Completata"}
+                            ? "In revisione"
+                            : "Completata"}
                       </td>
                       <td className="px-6 py-4 text-right space-x-2">
                         {request.status === "OPEN" && (
@@ -907,22 +1073,21 @@ const AdminDashboard = () => {
                   {(["ALL", "CREATED", "PAID", "CANCELED", "REFUNDED"] as const).map((status) => (
                     <button
                       key={status}
-                      className={`px-4 py-2 rounded-full text-xs font-bold ${
-                        ordersStatus === status
-                          ? "bg-[#0b224e] text-white"
-                          : "bg-white/70 text-slate-500"
-                      }`}
+                      className={`px-4 py-2 rounded-full text-xs font-bold ${ordersStatus === status
+                        ? "bg-[#0b224e] text-white"
+                        : "bg-white/70 text-slate-500"
+                        }`}
                       onClick={() => setOrdersStatus(status)}
                     >
                       {status === "ALL"
                         ? "Tutti"
                         : status === "CREATED"
-                        ? "Creati"
-                        : status === "PAID"
-                        ? "Pagati"
-                        : status === "CANCELED"
-                        ? "Annullati"
-                        : "Rimborsati"}
+                          ? "Creati"
+                          : status === "PAID"
+                            ? "Pagati"
+                            : status === "CANCELED"
+                              ? "Annullati"
+                              : "Rimborsati"}
                     </button>
                   ))}
                 </div>
@@ -1188,11 +1353,10 @@ const AdminDashboard = () => {
                   {(["ALL", "DRAFT", "PUBLISHED"] as const).map((status) => (
                     <button
                       key={status}
-                      className={`px-4 py-2 rounded-full text-xs font-bold ${
-                        newsStatus === status
-                          ? "bg-[#0b224e] text-white"
-                          : "bg-white/70 text-slate-500"
-                      }`}
+                      className={`px-4 py-2 rounded-full text-xs font-bold ${newsStatus === status
+                        ? "bg-[#0b224e] text-white"
+                        : "bg-white/70 text-slate-500"
+                        }`}
                       onClick={() => setNewsStatus(status)}
                     >
                       {status === "ALL" ? "Tutte" : status === "DRAFT" ? "Bozze" : "Pubblicate"}
@@ -1294,9 +1458,8 @@ const AdminDashboard = () => {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <button
-                          className={`text-xs font-bold underline ${
-                            user.isDisabled ? "text-green-700" : "text-red-600"
-                          }`}
+                          className={`text-xs font-bold underline ${user.isDisabled ? "text-green-700" : "text-red-600"
+                            }`}
                           onClick={() =>
                             handleUserUpdate(user, { isDisabled: !user.isDisabled })
                           }
@@ -1326,6 +1489,48 @@ const AdminDashboard = () => {
           )}
         </div>
       </div>
+
+      {showProductForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            <ProductForm
+              role="ADMIN"
+              initialData={editingProduct ? {
+                id: editingProduct.id,
+                title: editingProduct.title,
+                description: editingProduct.description,
+                priceCents: editingProduct.priceCents,
+                premiumOnly: editingProduct.premiumOnly,
+                pointsEligible: editingProduct.pointsEligible,
+                pointsPrice: editingProduct.pointsPrice,
+                specsJson: typeof editingProduct.specsJson === 'string' ? editingProduct.specsJson : JSON.stringify(editingProduct.specsJson),
+                category: editingProduct.category,
+                isFeatured: editingProduct.isFeatured,
+                isHero: editingProduct.isHero,
+                isPromo: editingProduct.isPromo,
+                isSplit: editingProduct.isSplit,
+                isCarousel: editingProduct.isCarousel,
+                isCollection: editingProduct.isCollection,
+                adminTag: editingProduct.adminTag,
+                images: editingProduct.media // Assuming API returns media
+              } : undefined}
+              onSubmit={async (data) => {
+                const saved = await handleProductSubmit(data);
+                if (saved) {
+                  // If new product created, we might want to keep modal open to add images (ProductForm handles partial state updates, but we need to update editingProduct here too)
+                  setEditingProduct(saved);
+                  // But if user clicked "Chiudi" inside ProductForm, onCancel is called.
+                  // ProductForm logic: "Crea e procedi" -> calls onSubmit. 
+                  // If successful, returns saved product.
+                  // We updated editingProduct inside ProductForm? No, ProductForm has internal state.
+                  // But for the modal to "switch" to "edit mode" data context if closed/reopened, we set editingProduct.
+                }
+              }}
+              onCancel={() => setShowProductForm(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

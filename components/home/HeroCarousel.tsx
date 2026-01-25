@@ -6,11 +6,14 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import type { HeroSlide } from "@/lib/homeData";
 
+import { cn } from "@/lib/utils";
+
 type HeroCarouselProps = {
   slides: HeroSlide[];
+  className?: string;
 };
 
-const HeroCarousel = ({ slides }: HeroCarouselProps) => {
+const HeroCarousel = ({ slides, className }: HeroCarouselProps) => {
   const safeSlides = useMemo(() => slides ?? [], [slides]);
   const [activeIndex, setActiveIndex] = useState(0);
   const touchStartX = useRef<number | null>(null);
@@ -26,7 +29,7 @@ const HeroCarousel = ({ slides }: HeroCarouselProps) => {
 
   return (
     <section
-      className="relative glass-card overflow-hidden section-pad px-6 md:px-10"
+      className={cn("relative glass-card overflow-hidden section-pad px-6 md:px-10", className)}
       onTouchStart={(event) => {
         touchStartX.current = event.touches[0]?.clientX ?? null;
       }}

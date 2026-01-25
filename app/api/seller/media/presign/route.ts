@@ -48,7 +48,7 @@ export async function POST(request: Request) {
   let session;
   try {
     session = await requireSession();
-    requireRole(session.user.role, ["SELLER"]);
+    requireRole(session.user.role, ["SELLER", "ADMIN"]);
   } catch (error) {
     if (error instanceof AuthError) {
       return NextResponse.json(

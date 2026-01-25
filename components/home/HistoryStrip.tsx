@@ -5,13 +5,16 @@ import Link from "next/link";
 import type { HistoryItem } from "@/lib/homeData";
 import HorizontalScroller from "@/components/home/HorizontalScroller";
 
+import { cn } from "@/lib/utils";
+
 type HistoryStripProps = {
   items: HistoryItem[];
+  className?: string;
 };
 
-const HistoryStrip = ({ items }: HistoryStripProps) => {
+const HistoryStrip = ({ items, className }: HistoryStripProps) => {
   return (
-    <section className="section-pad">
+    <section className={cn("section-pad", className)}>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
           <h2 className="text-2xl font-semibold text-[#0b224e]">Cronologia di navigazione</h2>
@@ -24,18 +27,19 @@ const HistoryStrip = ({ items }: HistoryStripProps) => {
 
       <HorizontalScroller label="Cronologia di navigazione">
         {items.map((item) => (
-          <div
+          <Link
             key={item.id}
-            className="glass-panel w-24 h-24 overflow-hidden flex items-center justify-center"
+            href={`/product/${item.id.replace('history-', '')}`}
+            className="glass-panel w-24 h-24 overflow-hidden flex items-center justify-center group flex-shrink-0"
           >
             <Image
               src={item.image}
               alt={item.title}
               width={96}
               height={96}
-              className="object-cover"
+              className="object-cover transition-transform duration-500 group-hover:scale-110"
             />
-          </div>
+          </Link>
         ))}
       </HorizontalScroller>
     </section>

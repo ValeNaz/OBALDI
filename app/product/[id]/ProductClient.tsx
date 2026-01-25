@@ -41,7 +41,10 @@ const ProductClient = ({ product }: ProductClientProps) => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     setCancelMessage(params.get("cancel") === "1");
-  }, []);
+
+    // Track view
+    fetch(`/api/products/${product.id}/view`, { method: "POST" }).catch(() => { });
+  }, [product.id]);
 
   const handleCheckout = async () => {
     setActionError(null);
@@ -279,11 +282,10 @@ const ProductClient = ({ product }: ProductClientProps) => {
                       <button
                         disabled={actionLoading || pointsToUse <= 0}
                         onClick={handlePointsPurchase}
-                        className={`w-full py-4 border-2 rounded-lg font-bold transition flex items-center justify-center ${
-                          pointsToUse > 0
+                        className={`w-full py-4 border-2 rounded-lg font-bold transition flex items-center justify-center ${pointsToUse > 0
                             ? "border-slate-800 text-[#0b224e] bg-white/70 hover:bg-white"
                             : "border-slate-200 text-slate-300 cursor-not-allowed bg-white/40"
-                        }`}
+                          }`}
                       >
                         {actionLoading ? "Elaborazione..." : label}
                       </button>

@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE "products" ADD COLUMN     "isCarousel" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "isCollection" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "isHero" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "isPromo" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "isSplit" BOOLEAN NOT NULL DEFAULT false;
