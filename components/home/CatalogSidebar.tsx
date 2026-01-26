@@ -61,7 +61,7 @@ const CatalogSidebar = ({
                         <button
                             key={cat.id}
                             onClick={() => onCategoryChange(cat.id)}
-                            className={`text-left px-4 py-2 rounded-xl text-sm font-semibold transition-all ${activeCategory === cat.id
+                            className={`text-left px-5 py-3 rounded-2xl text-sm font-semibold transition-all ${activeCategory === cat.id
                                 ? "bg-[#0b224e] text-white shadow-glow-soft translate-x-1"
                                 : "text-slate-600 hover:bg-white hover:text-[#0b224e]"
                                 }`}

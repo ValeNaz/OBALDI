@@ -1,10 +1,10 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import type { HeroSlide } from "@/lib/homeData";
+import { FaCheck } from "react-icons/fa";
 
 import { cn } from "@/lib/utils";
 
@@ -29,7 +29,7 @@ const HeroCarousel = ({ slides, className }: HeroCarouselProps) => {
 
   return (
     <section
-      className={cn("relative glass-card overflow-hidden section-pad px-6 md:px-10", className)}
+      className={cn("relative glass-card overflow-hidden py-8 md:py-16 px-5 md:px-10", className)}
       onTouchStart={(event) => {
         touchStartX.current = event.touches[0]?.clientX ?? null;
       }}
@@ -47,17 +47,8 @@ const HeroCarousel = ({ slides, className }: HeroCarouselProps) => {
         }
       }}
     >
-      <div className="absolute inset-0">
-        <Image
-          src={active.image}
-          alt={active.title}
-          fill
-          sizes="100vw"
-          className="object-cover"
-          priority
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/70 to-white/30" />
-        <div className="absolute inset-0 bg-gradient-to-t from-white/70 via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-slate-100">
+        <div className="absolute inset-0 bg-gradient-to-r from-white/60 via-transparent to-slate-100/40" />
       </div>
 
       <div className="relative z-10 grid gap-6 md:grid-cols-[1.2fr,0.8fr] items-center">
@@ -89,9 +80,9 @@ const HeroCarousel = ({ slides, className }: HeroCarouselProps) => {
               Selezioni curate, senza marketing aggressivo.
             </p>
             <ul className="space-y-2 text-sm text-slate-600">
-              <li>✓ Prodotti verificati dal team</li>
-              <li>✓ Spedizione sempre inclusa</li>
-              <li>✓ Supporto reale quando serve</li>
+              <li className="flex items-center gap-2"><FaCheck className="text-[#0b224e]" /> Prodotti verificati dal team</li>
+              <li className="flex items-center gap-2"><FaCheck className="text-[#0b224e]" /> Spedizione sempre inclusa</li>
+              <li className="flex items-center gap-2"><FaCheck className="text-[#0b224e]" /> Supporto reale quando serve</li>
             </ul>
           </div>
         </div>

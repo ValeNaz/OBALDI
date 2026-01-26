@@ -82,9 +82,8 @@ const CartDropdown = ({ buttonClassName = "" }: CartDropdownProps) => {
         role="dialog"
         aria-label="Carrello"
         tabIndex={-1}
-        className={`absolute right-0 mt-3 w-[320px] origin-top-right rounded-2xl border border-white/60 bg-white/95 p-4 shadow-xl backdrop-blur transition duration-200 ${
-          open ? "opacity-100 translate-y-0" : "pointer-events-none opacity-0 translate-y-2"
-        }`}
+        className={`absolute right-0 mt-3 w-[320px] origin-top-right rounded-2xl border border-white/60 bg-white/95 p-4 shadow-xl backdrop-blur transition duration-200 ${open ? "opacity-100 translate-y-0" : "pointer-events-none opacity-0 translate-y-2"
+          }`}
       >
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold text-[#0b224e]">Carrello</h3>

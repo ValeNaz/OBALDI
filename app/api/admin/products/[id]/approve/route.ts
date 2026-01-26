@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/src/core/db";
 import { AuthError, requireRole, requireSession } from "@/src/core/auth/guard";
 import { enforceSameOrigin } from "@/src/core/security/csrf";
+import { notifyProductApproved } from "@/lib/notifications";
 
 export async function POST(
   request: Request,
@@ -50,5 +51,9 @@ export async function POST(
     }
   });
 
+  // Notify seller about product approval
+  await notifyProductApproved(product.sellerId, product.id, product.title);
+
   return NextResponse.json({ product: updated });
 }
+

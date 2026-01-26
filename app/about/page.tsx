@@ -1,5 +1,22 @@
 import Image from "next/image";
 import Link from "next/link";
+import {
+  FaExclamationTriangle,
+  FaMoneyBillWave,
+  FaChartLine,
+  FaLightbulb,
+  FaFrown,
+  FaBullseye,
+  FaTimes,
+  FaCheck,
+  FaShieldAlt,
+  FaBook,
+  FaCommentDots,
+  FaStar,
+  FaBalanceScale,
+  FaSearch,
+  FaArrowRight
+} from "react-icons/fa";
 
 export default function ChiSiamo() {
   return (
@@ -9,254 +26,304 @@ export default function ChiSiamo() {
       <div className="pointer-events-none absolute top-[60%] left-[-15%] h-[500px] w-[500px] rounded-full bg-gradient-to-tr from-[#a41f2e]/8 to-[#a41f2e]/3 blur-[120px]" />
 
       <main className="container-max page-pad">
-        {/* Hero Section */}
-        <section className="min-h-[70vh] flex items-center justify-center pt-20 pb-32">
-          <div className="max-w-5xl mx-auto text-center space-y-8 animate-fade-up">
-            <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/60 backdrop-blur-sm border border-slate-200/50 shadow-sm">
-              <div className="h-2 w-2 rounded-full bg-[#0b224e] animate-pulse" />
-              <span className="text-xs font-semibold tracking-wider uppercase text-slate-600">
-                La nostra storia
-              </span>
-            </div>
-            
-            <h1 className="text-6xl md:text-7xl lg:text-8xl font-display font-bold text-[#0b224e] leading-[1.1] tracking-tight">
-              Chi siamo
-            </h1>
-            
-            <p className="text-2xl md:text-3xl text-slate-600 leading-relaxed font-light max-w-4xl mx-auto">
-              Un team di professionisti che ha scelto di fare impresa partendo dall'esperienza reale, vissuta sulla propria pelle.
-            </p>
-          </div>
-        </section>
+        {/* Hero Section - Redesigned */}
+        <section className="min-h-[40vh] md:min-h-[50vh] flex items-center pt-32 md:pt-40 pb-16 relative">
+          <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+            <div className="space-y-8 animate-fade-up">
+              <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-[#0b224e]/5 border border-[#0b224e]/10">
+                <FaShieldAlt className="text-[#0b224e]" />
+                <span className="text-sm font-semibold tracking-wider uppercase text-[#0b224e]">
+                  La nostra storia
+                </span>
+              </div>
 
-        {/* Timeline Section */}
-        <section className="py-24 max-w-6xl mx-auto">
-          <div className="space-y-16">
-            {/* Esperienza */}
-            <div className="grid lg:grid-cols-[1fr_2fr] gap-12 items-start">
-              <div className="lg:sticky lg:top-24">
-                <div className="inline-block px-6 py-3 rounded-full bg-[#0b224e] text-white font-semibold shadow-lg">
-                  10+ anni
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-display font-bold text-[#0b224e] leading-[1.1] tracking-tight">
+                Chi siamo
+              </h1>
+
+              <p className="text-xl md:text-2xl text-slate-600 leading-relaxed font-light max-w-xl">
+                Un team di professionisti che ha scelto di fare impresa partendo dall'esperienza reale, vissuta sulla propria pelle.
+              </p>
+
+              <div className="flex items-center gap-6 pt-4">
+                <div className="text-center">
+                  <div className="text-4xl font-bold text-[#0b224e]">10+</div>
+                  <div className="text-sm text-slate-500">Anni di esperienza</div>
                 </div>
-                <h2 className="text-4xl font-display font-bold text-[#0b224e] mt-6">
-                  L'esperienza
-                </h2>
-              </div>
-              
-              <div className="bg-white rounded-3xl p-10 shadow-xl border border-slate-200/50">
-                <p className="text-lg text-slate-700 leading-relaxed mb-6">
-                  Per oltre dieci anni abbiamo lavorato nel mondo delle vendite online. In questo percorso abbiamo visto da vicino quanto sia facile ingannare i consumatori:
-                </p>
-                <ul className="space-y-4 text-slate-600">
-                  <li className="flex items-start gap-3">
-                    <span className="text-2xl text-[#a41f2e]">⚠️</span>
-                    <span>Promesse esagerate e prodotti "pompati" nel marketing</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="text-2xl text-[#a41f2e]">💸</span>
-                    <span>Prezzi che non rispecchiano il valore o l'utilità reale</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="text-2xl text-[#a41f2e]">📊</span>
-                    <span>Meccanismi studiati per massimizzare i profitti a discapito di chi acquista</span>
-                  </li>
-                </ul>
+                <div className="h-12 w-px bg-slate-200" />
+                <div className="text-center">
+                  <div className="text-4xl font-bold text-[#0b224e]">100%</div>
+                  <div className="text-sm text-slate-500">Trasparenza</div>
+                </div>
+                <div className="h-12 w-px bg-slate-200" />
+                <div className="text-center">
+                  <div className="text-4xl font-bold text-[#0b224e]">0</div>
+                  <div className="text-sm text-slate-500">Pubblicità aggressive</div>
+                </div>
               </div>
             </div>
 
-            {/* Consapevolezza */}
-            <div className="grid lg:grid-cols-[2fr_1fr] gap-12 items-start">
-              <div className="bg-gradient-to-br from-[#0b224e] to-[#0b224e]/90 rounded-3xl p-10 shadow-xl text-white">
-                <h3 className="text-3xl font-display font-bold mb-6">Prima di tutto, siamo stati clienti</h3>
-                <p className="text-lg leading-relaxed mb-6 opacity-95">
-                  E come molti, siamo stati anche vittime di acquisti sbagliati, di fiducia mal riposta, di soldi persi senza alcuna reale tutela.
-                </p>
-                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-                  <p className="text-xl font-semibold mb-3">La verità che abbiamo scoperto</p>
-                  <p className="opacity-90">
-                    Per una persona, 50 o 100 euro non sono "solo" una cifra. Possono essere un sacrificio, un regalo importante, una scelta fatta con attenzione in un contesto in cui la stabilità economica non è sempre garantita.
+            <div className="relative hidden lg:block">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#0b224e]/10 to-[#a41f2e]/10 rounded-[40px] blur-3xl" />
+              <div className="relative bg-white rounded-[40px] p-10 shadow-2xl border border-slate-100">
+                <div className="space-y-6">
+                  <div className="flex items-center gap-4">
+                    <div className="h-14 w-14 rounded-2xl bg-[#0b224e] flex items-center justify-center">
+                      <FaShieldAlt className="text-2xl text-white" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-[#0b224e]">Tutela</div>
+                      <div className="text-sm text-slate-500">Il nostro valore fondante</div>
+                    </div>
+                  </div>
+                  <div className="h-px bg-slate-100" />
+                  <p className="text-slate-600 leading-relaxed">
+                    Ogni giorno lavoriamo per proteggere le persone dalle insidie degli acquisti online. Non vendiamo promesse, offriamo sicurezza.
                   </p>
                 </div>
               </div>
-              
-              <div className="lg:sticky lg:top-24">
-                <div className="h-16 w-16 rounded-2xl bg-[#a41f2e]/10 flex items-center justify-center mb-4">
-                  <span className="text-3xl">💡</span>
-                </div>
-                <h2 className="text-4xl font-display font-bold text-[#0b224e]">
-                  La consapevolezza
-                </h2>
-              </div>
-            </div>
-
-            {/* Il danno */}
-            <div className="bg-gradient-to-br from-white to-slate-50/50 rounded-3xl p-10 shadow-xl border border-slate-200/50 text-center max-w-4xl mx-auto">
-              <p className="text-2xl text-slate-700 font-semibold mb-4">
-                Quando quell'acquisto si rivela inutile o ingannevole
-              </p>
-              <p className="text-xl text-slate-600 leading-relaxed">
-                Il danno non è solo economico, <span className="text-[#0b224e] font-semibold">ma anche umano.</span>
-              </p>
             </div>
           </div>
         </section>
 
-        {/* Stanchezza del sistema */}
-        <section className="py-24">
+        {/* L'Esperienza - Timeline Style */}
+        <section className="py-12 md:py-16">
           <div className="max-w-6xl mx-auto">
-            <div className="bg-white rounded-[60px] p-16 shadow-2xl border border-slate-200/50">
-              <div className="text-center mb-12">
-                <h2 className="text-5xl md:text-6xl font-display font-bold text-[#0b224e] mb-6">
-                  Il punto di rottura
-                </h2>
-                <p className="text-2xl text-slate-600 font-light">
-                  Da questa consapevolezza nasce la nostra visione
+            <div className="grid lg:grid-cols-3 gap-8">
+              {/* Card 1 */}
+              <div className="group relative bg-white rounded-3xl p-8 shadow-lg border border-slate-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+                <div className="h-14 w-14 rounded-2xl bg-[#a41f2e]/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                  <FaExclamationTriangle className="text-2xl text-[#a41f2e]" />
+                </div>
+                <h3 className="text-xl font-bold text-[#0b224e] mb-3">Promesse esagerate</h3>
+                <p className="text-slate-600 leading-relaxed">
+                  Prodotti "pompati" nel marketing che non mantengono mai le aspettative create.
                 </p>
               </div>
-              
-              <div className="grid md:grid-cols-2 gap-8 mb-10">
-                <div className="bg-[#a41f2e]/5 rounded-3xl p-8 border-2 border-[#a41f2e]/20">
-                  <div className="h-14 w-14 rounded-2xl bg-[#a41f2e]/10 flex items-center justify-center mb-4">
-                    <span className="text-3xl">😔</span>
-                  </div>
-                  <h3 className="text-2xl font-semibold text-[#0b224e] mb-4">Ci siamo stancati di</h3>
-                  <ul className="space-y-3 text-slate-700">
-                    <li className="flex items-start gap-2">
-                      <span className="text-[#a41f2e] font-bold">✗</span>
-                      <span>Vedere le persone trattate come numeri</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-[#a41f2e] font-bold">✗</span>
-                      <span>Un sistema che premia chi vende meglio, non chi vende in modo corretto</span>
-                    </li>
-                  </ul>
+
+              {/* Card 2 */}
+              <div className="group relative bg-white rounded-3xl p-8 shadow-lg border border-slate-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+                <div className="h-14 w-14 rounded-2xl bg-[#a41f2e]/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                  <FaMoneyBillWave className="text-2xl text-[#a41f2e]" />
                 </div>
-                
-                <div className="bg-[#0b224e]/5 rounded-3xl p-8 border-2 border-[#0b224e]/20">
-                  <div className="h-14 w-14 rounded-2xl bg-[#0b224e]/10 flex items-center justify-center mb-4">
-                    <span className="text-3xl">🎯</span>
-                  </div>
-                  <h3 className="text-2xl font-semibold text-[#0b224e] mb-4">Abbiamo deciso di</h3>
-                  <ul className="space-y-3 text-slate-700">
-                    <li className="flex items-start gap-2">
-                      <span className="text-[#0b224e] font-bold">✓</span>
-                      <span>Tutelare ogni persona negli acquisti online</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-[#0b224e] font-bold">✓</span>
-                      <span>Offrire supporto e orientamento concreto</span>
-                    </li>
-                  </ul>
+                <h3 className="text-xl font-bold text-[#0b224e] mb-3">Prezzi ingannevoli</h3>
+                <p className="text-slate-600 leading-relaxed">
+                  Costi che non rispecchiano il valore o l'utilità reale del prodotto.
+                </p>
+              </div>
+
+              {/* Card 3 */}
+              <div className="group relative bg-white rounded-3xl p-8 shadow-lg border border-slate-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+                <div className="h-14 w-14 rounded-2xl bg-[#a41f2e]/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                  <FaChartLine className="text-2xl text-[#a41f2e]" />
                 </div>
+                <h3 className="text-xl font-bold text-[#0b224e] mb-3">Profitto a ogni costo</h3>
+                <p className="text-slate-600 leading-relaxed">
+                  Meccanismi studiati per massimizzare i profitti a discapito di chi acquista.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* La Consapevolezza - Large Feature */}
+        <section className="py-24">
+          <div className="max-w-6xl mx-auto">
+            <div className="bg-gradient-to-br from-[#0b224e] to-[#1a3a6e] rounded-[48px] p-12 md:p-16 text-white overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#a41f2e]/20 rounded-full blur-3xl" />
+
+              <div className="relative grid lg:grid-cols-2 gap-12 items-center">
+                <div>
+                  <div className="inline-flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full mb-6">
+                    <FaLightbulb className="text-amber-400" />
+                    <span className="text-sm font-semibold">La consapevolezza</span>
+                  </div>
+                  <h2 className="text-4xl md:text-5xl font-display font-bold mb-6 leading-tight">
+                    Prima di tutto, siamo stati clienti
+                  </h2>
+                  <p className="text-lg opacity-90 leading-relaxed mb-6">
+                    E come molti, siamo stati anche vittime di acquisti sbagliati, di fiducia mal riposta, di soldi persi senza alcuna reale tutela.
+                  </p>
+                </div>
+
+                <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-8 border border-white/20">
+                  <h3 className="text-2xl font-bold mb-4">La verità che abbiamo scoperto</h3>
+                  <p className="text-lg opacity-95 leading-relaxed">
+                    Per una persona, 50 o 100 euro non sono "solo" una cifra. Possono essere un sacrificio, un regalo importante, una scelta fatta con attenzione in un contesto in cui la stabilità economica non è sempre garantita.
+                  </p>
+                  <div className="mt-6 pt-6 border-t border-white/20">
+                    <p className="text-xl font-semibold">
+                      Quando quell'acquisto si rivela inutile o ingannevole, il danno non è solo economico, <span className="text-amber-400">ma anche umano.</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Il Punto di Rottura */}
+        <section className="py-24">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl md:text-5xl font-display font-bold text-[#0b224e] mb-4">
+                Il punto di rottura
+              </h2>
+              <p className="text-xl text-slate-600">Da questa consapevolezza nasce la nostra visione</p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-8">
+              {/* Stanchezza */}
+              <div className="bg-white rounded-3xl p-10 shadow-xl border border-[#a41f2e]/20 hover:shadow-2xl transition-shadow">
+                <div className="h-16 w-16 rounded-2xl bg-[#a41f2e]/10 flex items-center justify-center mb-6">
+                  <FaFrown className="text-3xl text-[#a41f2e]" />
+                </div>
+                <h3 className="text-2xl font-bold text-[#0b224e] mb-6">Ci siamo stancati di</h3>
+                <ul className="space-y-4">
+                  <li className="flex items-start gap-3">
+                    <FaTimes className="text-[#a41f2e] mt-1 flex-shrink-0" />
+                    <span className="text-slate-700">Vedere le persone trattate come numeri</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <FaTimes className="text-[#a41f2e] mt-1 flex-shrink-0" />
+                    <span className="text-slate-700">Un sistema che premia chi vende meglio, non chi vende in modo corretto</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Decisione */}
+              <div className="bg-white rounded-3xl p-10 shadow-xl border border-[#0b224e]/20 hover:shadow-2xl transition-shadow">
+                <div className="h-16 w-16 rounded-2xl bg-[#0b224e]/10 flex items-center justify-center mb-6">
+                  <FaBullseye className="text-3xl text-[#0b224e]" />
+                </div>
+                <h3 className="text-2xl font-bold text-[#0b224e] mb-6">Abbiamo deciso di</h3>
+                <ul className="space-y-4">
+                  <li className="flex items-start gap-3">
+                    <FaCheck className="text-[#0b224e] mt-1 flex-shrink-0" />
+                    <span className="text-slate-700">Tutelare ogni persona negli acquisti online</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <FaCheck className="text-[#0b224e] mt-1 flex-shrink-0" />
+                    <span className="text-slate-700">Offrire supporto e orientamento concreto</span>
+                  </li>
+                </ul>
               </div>
             </div>
           </div>
         </section>
 
         {/* Nasce Obaldi */}
-        <section className="py-24 bg-gradient-to-br from-[#0b224e] to-[#0b224e]/90 rounded-[60px] text-white my-24">
-          <div className="max-w-6xl mx-auto px-8">
-            <div className="text-center mb-16">
-              <div className="inline-block h-20 w-20 rounded-3xl bg-white/20 flex items-center justify-center mb-6">
-                <span className="text-5xl">🛡️</span>
+        <section className="py-24">
+          <div className="max-w-6xl mx-auto">
+            <div className="bg-gradient-to-br from-slate-50 to-white rounded-[48px] p-12 md:p-16 shadow-2xl border border-slate-200/50">
+              <div className="text-center mb-12">
+                <div className="inline-flex h-20 w-20 rounded-3xl bg-[#0b224e] items-center justify-center mb-6 shadow-lg shadow-[#0b224e]/20">
+                  <FaShieldAlt className="text-4xl text-white" />
+                </div>
+                <h2 className="text-4xl md:text-5xl font-display font-bold text-[#0b224e] mb-4">
+                  Nasce OBALDI
+                </h2>
+                <p className="text-xl text-slate-600 max-w-3xl mx-auto">
+                  Un progetto pensato per offrire supporto, orientamento e un punto di riferimento concreto
+                </p>
               </div>
-              <h2 className="text-5xl md:text-6xl font-display font-bold mb-6">
-                Nasce OBALDI
-              </h2>
-              <p className="text-2xl opacity-95 max-w-3xl mx-auto leading-relaxed">
-                Un progetto pensato per offrire supporto, orientamento e un punto di riferimento concreto
-              </p>
-            </div>
-            
-            <div className="grid md:grid-cols-3 gap-6 mb-12">
-              <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-8 border border-white/20">
-                <div className="text-4xl mb-4">📚</div>
-                <h3 className="text-xl font-semibold mb-3">Dall'esperienza</h3>
-                <p className="opacity-90">Anni di lavoro nel settore delle vendite online</p>
+
+              <div className="grid md:grid-cols-3 gap-6">
+                <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100 text-center hover:shadow-xl transition-shadow">
+                  <div className="h-14 w-14 rounded-xl bg-[#0b224e]/10 flex items-center justify-center mx-auto mb-4">
+                    <FaBook className="text-2xl text-[#0b224e]" />
+                  </div>
+                  <h4 className="font-bold text-[#0b224e] mb-2">Dall'esperienza</h4>
+                  <p className="text-sm text-slate-600">Anni di lavoro nel settore delle vendite online</p>
+                </div>
+
+                <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100 text-center hover:shadow-xl transition-shadow">
+                  <div className="h-14 w-14 rounded-xl bg-[#0b224e]/10 flex items-center justify-center mx-auto mb-4">
+                    <FaCommentDots className="text-2xl text-[#0b224e]" />
+                  </div>
+                  <h4 className="font-bold text-[#0b224e] mb-2">Dagli errori</h4>
+                  <p className="text-sm text-slate-600">Vissuti in prima persona come clienti</p>
+                </div>
+
+                <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100 text-center hover:shadow-xl transition-shadow">
+                  <div className="h-14 w-14 rounded-xl bg-[#0b224e]/10 flex items-center justify-center mx-auto mb-4">
+                    <FaStar className="text-2xl text-[#0b224e]" />
+                  </div>
+                  <h4 className="font-bold text-[#0b224e] mb-2">Dalla volontà</h4>
+                  <p className="text-sm text-slate-600">Di fare le cose in modo diverso</p>
+                </div>
               </div>
-              
-              <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-8 border border-white/20">
-                <div className="text-4xl mb-4">💭</div>
-                <h3 className="text-xl font-semibold mb-3">Dagli errori</h3>
-                <p className="opacity-90">Vissuti in prima persona come clienti</p>
+
+              <div className="mt-10 bg-[#0b224e]/5 rounded-2xl p-8 text-center">
+                <p className="text-lg text-[#0b224e] font-medium">
+                  Con rispetto, responsabilità e attenzione reale verso le persone.<br />
+                  <span className="opacity-70">Per tutte quelle persone che, prima di un acquisto online, non sanno a chi affidarsi.</span>
+                </p>
               </div>
-              
-              <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-8 border border-white/20">
-                <div className="text-4xl mb-4">✨</div>
-                <h3 className="text-xl font-semibold mb-3">Dalla volontà</h3>
-                <p className="opacity-90">Di fare le cose in modo diverso</p>
-              </div>
-            </div>
-            
-            <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-10 border border-white/20 text-center">
-              <p className="text-2xl font-semibold mb-4">Con rispetto, responsabilità e attenzione reale verso le persone</p>
-              <p className="text-lg opacity-90">
-                Per tutte quelle persone che, prima di un acquisto online, non sanno a chi affidarsi.
-              </p>
             </div>
           </div>
         </section>
 
-        {/* Mission & Vision */}
+        {/* Il Nostro Obiettivo */}
         <section className="py-24">
-          <div className="max-w-6xl mx-auto space-y-16">
-            {/* Obiettivo */}
+          <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-5xl md:text-6xl font-display font-bold text-[#0b224e] mb-6">
+              <h2 className="text-4xl md:text-5xl font-display font-bold text-[#0b224e] mb-4">
                 Il nostro obiettivo
               </h2>
-              <p className="text-2xl text-slate-600 max-w-4xl mx-auto leading-relaxed">
+              <p className="text-xl text-slate-600 max-w-4xl mx-auto">
                 Contribuire alla costruzione di un contesto in cui gli acquisti online possano avvenire in modo più sicuro, consapevole e sereno
               </p>
             </div>
 
             <div className="grid md:grid-cols-2 gap-8">
-              <div className="bg-white rounded-3xl p-10 shadow-xl border border-slate-200/50">
+              <div className="bg-white rounded-3xl p-10 shadow-xl border border-slate-100">
                 <div className="h-16 w-16 rounded-2xl bg-[#0b224e]/10 flex items-center justify-center mb-6">
-                  <span className="text-3xl">🎯</span>
+                  <FaBullseye className="text-3xl text-[#0b224e]" />
                 </div>
-                <h3 className="text-2xl font-semibold text-[#0b224e] mb-6">Cosa facciamo</h3>
-                <ul className="space-y-4 text-slate-600">
+                <h3 className="text-2xl font-bold text-[#0b224e] mb-6">Cosa facciamo</h3>
+                <ul className="space-y-4">
                   <li className="flex items-start gap-3">
-                    <span className="text-[#0b224e] text-xl">→</span>
-                    <span>Offriamo supporto e orientamento su come valutare acquisti online</span>
+                    <FaArrowRight className="text-[#0b224e] mt-1 flex-shrink-0" />
+                    <span className="text-slate-700">Offriamo supporto e orientamento su come valutare acquisti online</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="text-[#0b224e] text-xl">→</span>
-                    <span>Aiutiamo a individuare potenziali criticità</span>
+                    <FaArrowRight className="text-[#0b224e] mt-1 flex-shrink-0" />
+                    <span className="text-slate-700">Aiutiamo a individuare potenziali criticità</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="text-[#0b224e] text-xl">→</span>
-                    <span>Riduciamo il rischio di scelte non consapevoli</span>
+                    <FaArrowRight className="text-[#0b224e] mt-1 flex-shrink-0" />
+                    <span className="text-slate-700">Riduciamo il rischio di scelte non consapevoli</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="text-[#0b224e] text-xl">→</span>
-                    <span>Riduciamo l'incertezza e il timore legati agli acquisti online</span>
+                    <FaArrowRight className="text-[#0b224e] mt-1 flex-shrink-0" />
+                    <span className="text-slate-700">Riduciamo l'incertezza e il timore legati agli acquisti online</span>
                   </li>
                 </ul>
               </div>
-              
-              <div className="bg-white rounded-3xl p-10 shadow-xl border border-slate-200/50">
-                <div className="h-16 w-16 rounded-2xl bg-[#0b224e]/10 flex items-center justify-center mb-6">
-                  <span className="text-3xl">🚫</span>
+
+              <div className="bg-white rounded-3xl p-10 shadow-xl border border-slate-100">
+                <div className="h-16 w-16 rounded-2xl bg-[#a41f2e]/10 flex items-center justify-center mb-6">
+                  <FaShieldAlt className="text-3xl text-[#a41f2e]" />
                 </div>
-                <h3 className="text-2xl font-semibold text-[#0b224e] mb-6">Cosa preveniamo</h3>
-                <ul className="space-y-4 text-slate-600">
+                <h3 className="text-2xl font-bold text-[#0b224e] mb-6">Cosa preveniamo</h3>
+                <ul className="space-y-4">
                   <li className="flex items-start gap-3">
-                    <span className="text-[#a41f2e] text-xl">✗</span>
-                    <span>Situazioni di pressione commerciale</span>
+                    <FaTimes className="text-[#a41f2e] mt-1 flex-shrink-0" />
+                    <span className="text-slate-700">Situazioni di pressione commerciale</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="text-[#a41f2e] text-xl">✗</span>
-                    <span>Acquisti impulsivi</span>
+                    <FaTimes className="text-[#a41f2e] mt-1 flex-shrink-0" />
+                    <span className="text-slate-700">Acquisti impulsivi</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="text-[#a41f2e] text-xl">✗</span>
-                    <span>Acquisti potenzialmente rischiosi</span>
+                    <FaTimes className="text-[#a41f2e] mt-1 flex-shrink-0" />
+                    <span className="text-slate-700">Acquisti potenzialmente rischiosi</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="text-[#a41f2e] text-xl">✗</span>
-                    <span>Decisioni non informate</span>
+                    <FaTimes className="text-[#a41f2e] mt-1 flex-shrink-0" />
+                    <span className="text-slate-700">Decisioni non informate</span>
                   </li>
                 </ul>
               </div>
@@ -264,79 +331,83 @@ export default function ChiSiamo() {
           </div>
         </section>
 
-        {/* Principio chiaro */}
+        {/* Principio Chiaro */}
         <section className="py-24">
-          <div className="max-w-5xl mx-auto">
-            <div className="bg-gradient-to-br from-white to-slate-50/50 rounded-[60px] p-16 shadow-2xl border-2 border-[#0b224e]/10 text-center">
-              <div className="inline-block h-24 w-24 rounded-3xl bg-[#0b224e]/10 flex items-center justify-center mb-8">
-                <span className="text-5xl">⚖️</span>
-              </div>
-              <h2 className="text-4xl md:text-5xl font-display font-bold text-[#0b224e] mb-6">
-                Il nostro principio chiaro
-              </h2>
-              <p className="text-3xl text-slate-700 font-semibold mb-8 leading-relaxed">
-                Non incentivare l'acquisto,<br />
-                ma favorire decisioni informate
-              </p>
-              <div className="bg-white rounded-3xl p-8 border border-slate-200/50 max-w-3xl mx-auto">
-                <p className="text-xl text-slate-600 leading-relaxed mb-4">
-                  La decisione finale di acquistare o meno resta sempre personale.
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-gradient-to-br from-[#0b224e] to-[#1a3a6e] rounded-[48px] p-12 md:p-16 text-white text-center relative overflow-hidden">
+              <div className="absolute inset-0 bg-[url('/media/pattern.svg')] opacity-5" />
+              <div className="relative">
+                <div className="inline-flex h-20 w-20 rounded-3xl bg-white/20 items-center justify-center mb-8">
+                  <FaBalanceScale className="text-4xl" />
+                </div>
+                <h2 className="text-3xl md:text-4xl font-display font-bold mb-6">
+                  Il nostro principio chiaro
+                </h2>
+                <p className="text-2xl md:text-3xl font-light mb-8 leading-relaxed">
+                  Non incentivare l'acquisto,<br />
+                  <span className="font-semibold">ma favorire decisioni informate</span>
                 </p>
-                <p className="text-lg text-slate-600 leading-relaxed">
-                  Il nostro ruolo è fornire elementi utili alla valutazione, affinché ogni scelta possa essere presa con maggiore consapevolezza e tranquillità.
-                </p>
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+                  <p className="text-lg opacity-95">
+                    La decisione finale di acquistare o meno resta sempre personale. Il nostro ruolo è fornire elementi utili alla valutazione, affinché ogni scelta possa essere presa con maggiore consapevolezza e tranquillità.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
         {/* Visione */}
-        <section className="py-24 bg-gradient-to-br from-[#0b224e] to-[#0b224e]/90 rounded-[60px] text-white my-24">
-          <div className="max-w-6xl mx-auto px-8">
+        <section className="py-24">
+          <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-5xl md:text-6xl font-display font-bold mb-6">
+              <h2 className="text-4xl md:text-5xl font-display font-bold text-[#0b224e] mb-4">
                 La visione di OBALDI
               </h2>
-              <p className="text-2xl opacity-95 max-w-4xl mx-auto leading-relaxed">
+              <p className="text-xl text-slate-600 max-w-4xl mx-auto">
                 Sviluppare un ecosistema di supporto e tutela per offrire un punto di riferimento affidabile in un contesto digitale complesso
               </p>
             </div>
-            
+
             <div className="grid md:grid-cols-2 gap-8">
-              <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-10 border border-white/20">
-                <div className="text-4xl mb-6">🔍</div>
-                <h3 className="text-2xl font-semibold mb-4">Fondato su</h3>
-                <ul className="space-y-3 text-lg opacity-95">
-                  <li className="flex items-start gap-3">
-                    <span>•</span>
-                    <span>Analisi dei fattori di rischio</span>
+              <div className="bg-white rounded-3xl p-10 shadow-xl border border-slate-100">
+                <div className="h-16 w-16 rounded-2xl bg-[#0b224e]/10 flex items-center justify-center mb-6">
+                  <FaSearch className="text-3xl text-[#0b224e]" />
+                </div>
+                <h3 className="text-2xl font-bold text-[#0b224e] mb-6">Fondato su</h3>
+                <ul className="space-y-3">
+                  <li className="flex items-center gap-3 text-slate-700">
+                    <div className="h-2 w-2 rounded-full bg-[#0b224e]" />
+                    Analisi dei fattori di rischio
                   </li>
-                  <li className="flex items-start gap-3">
-                    <span>•</span>
-                    <span>Esperienza maturata nel tempo</span>
+                  <li className="flex items-center gap-3 text-slate-700">
+                    <div className="h-2 w-2 rounded-full bg-[#0b224e]" />
+                    Esperienza maturata nel tempo
                   </li>
-                  <li className="flex items-start gap-3">
-                    <span>•</span>
-                    <span>Competenza nel settore</span>
+                  <li className="flex items-center gap-3 text-slate-700">
+                    <div className="h-2 w-2 rounded-full bg-[#0b224e]" />
+                    Competenza nel settore
                   </li>
                 </ul>
               </div>
-              
-              <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-10 border border-white/20">
-                <div className="text-4xl mb-6">🎯</div>
-                <h3 className="text-2xl font-semibold mb-4">Orientato a</h3>
-                <ul className="space-y-3 text-lg opacity-95">
-                  <li className="flex items-start gap-3">
-                    <span>•</span>
-                    <span>Promuovere approccio responsabile</span>
+
+              <div className="bg-white rounded-3xl p-10 shadow-xl border border-slate-100">
+                <div className="h-16 w-16 rounded-2xl bg-[#0b224e]/10 flex items-center justify-center mb-6">
+                  <FaBullseye className="text-3xl text-[#0b224e]" />
+                </div>
+                <h3 className="text-2xl font-bold text-[#0b224e] mb-6">Orientato a</h3>
+                <ul className="space-y-3">
+                  <li className="flex items-center gap-3 text-slate-700">
+                    <div className="h-2 w-2 rounded-full bg-[#0b224e]" />
+                    Promuovere approccio responsabile
                   </li>
-                  <li className="flex items-start gap-3">
-                    <span>•</span>
-                    <span>Fornire informazioni necessarie</span>
+                  <li className="flex items-center gap-3 text-slate-700">
+                    <div className="h-2 w-2 rounded-full bg-[#0b224e]" />
+                    Fornire informazioni necessarie
                   </li>
-                  <li className="flex items-start gap-3">
-                    <span>•</span>
-                    <span>Garantire scelte consapevoli</span>
+                  <li className="flex items-center gap-3 text-slate-700">
+                    <div className="h-2 w-2 rounded-full bg-[#0b224e]" />
+                    Garantire scelte consapevoli
                   </li>
                 </ul>
               </div>
@@ -344,69 +415,43 @@ export default function ChiSiamo() {
           </div>
         </section>
 
-        {/* Finalità */}
+        {/* Finalità - Numbered Steps */}
         <section className="py-24">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-5xl md:text-6xl font-display font-bold text-[#0b224e] mb-12">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-4xl md:text-5xl font-display font-bold text-[#0b224e] text-center mb-16">
               La nostra finalità
             </h2>
-            
-            <div className="bg-white rounded-[60px] p-16 shadow-2xl border border-slate-200/50">
-              <div className="space-y-8">
-                <div className="flex items-start gap-6 text-left">
+
+            <div className="space-y-6">
+              {[
+                { num: 1, title: "Supportare e tutelare", desc: "Le persone nelle scelte di acquisto online" },
+                { num: 2, title: "Fornire informazioni", desc: "Necessarie per valutare correttamente ogni prodotto" },
+                { num: 3, title: "Garantire consapevolezza", desc: "Così che la decisione finale sia sempre consapevole e informata" }
+              ].map((item) => (
+                <div key={item.num} className="flex items-start gap-6 bg-white rounded-2xl p-8 shadow-lg border border-slate-100 hover:shadow-xl transition-shadow">
                   <div className="h-16 w-16 rounded-2xl bg-[#0b224e] text-white flex items-center justify-center flex-shrink-0 text-2xl font-bold">
-                    1
+                    {item.num}
                   </div>
                   <div>
-                    <h3 className="text-2xl font-semibold text-[#0b224e] mb-3">Supportare e tutelare</h3>
-                    <p className="text-lg text-slate-600 leading-relaxed">
-                      Le persone nelle scelte di acquisto online
-                    </p>
+                    <h3 className="text-xl font-bold text-[#0b224e] mb-2">{item.title}</h3>
+                    <p className="text-slate-600">{item.desc}</p>
                   </div>
                 </div>
-                
-                <div className="h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
-                
-                <div className="flex items-start gap-6 text-left">
-                  <div className="h-16 w-16 rounded-2xl bg-[#0b224e] text-white flex items-center justify-center flex-shrink-0 text-2xl font-bold">
-                    2
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-semibold text-[#0b224e] mb-3">Fornire informazioni</h3>
-                    <p className="text-lg text-slate-600 leading-relaxed">
-                      Necessarie per valutare correttamente ogni prodotto
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
-                
-                <div className="flex items-start gap-6 text-left">
-                  <div className="h-16 w-16 rounded-2xl bg-[#0b224e] text-white flex items-center justify-center flex-shrink-0 text-2xl font-bold">
-                    3
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-semibold text-[#0b224e] mb-3">Garantire consapevolezza</h3>
-                    <p className="text-lg text-slate-600 leading-relaxed">
-                      Così che la decisione finale sia sempre consapevole e informata
-                    </p>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </section>
 
         {/* CTA finale */}
         <section className="py-24 text-center">
-          <div className="max-w-4xl mx-auto bg-gradient-to-br from-slate-50 to-white rounded-[60px] p-16 shadow-2xl border border-slate-200/50">
-            <h2 className="text-4xl md:text-5xl font-display font-bold text-[#0b224e] mb-6">
+          <div className="max-w-4xl mx-auto bg-gradient-to-br from-slate-50 to-white rounded-[48px] p-12 md:p-16 shadow-2xl border border-slate-200/50">
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-[#0b224e] mb-6">
               Unisciti a noi
             </h2>
-            <p className="text-xl text-slate-600 leading-relaxed mb-10 max-w-2xl mx-auto">
+            <p className="text-lg text-slate-600 leading-relaxed mb-10 max-w-2xl mx-auto">
               Scopri come OBALDI può aiutarti a fare acquisti online in modo più sicuro, consapevole e sereno.
             </p>
-            
+
             <div className="flex flex-wrap gap-4 justify-center">
               <Link
                 href="/membership"

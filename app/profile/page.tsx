@@ -55,11 +55,11 @@ export default function ProfilePage() {
   const [bio, setBio] = useState("");
 
   useEffect(() => {
-    const controller = new AbortController();
-
     const load = async () => {
       try {
-        const response = await fetch("/api/me", { signal: controller.signal });
+        const response = await fetch("/api/me", {
+          credentials: "include"
+        });
         if (!response.ok) {
           setError("Sessione non valida. Accedi di nuovo.");
           return;
@@ -76,17 +76,14 @@ export default function ProfilePage() {
     };
 
     load();
-    return () => controller.abort();
   }, []);
 
   useEffect(() => {
-    const controller = new AbortController();
-
     const load = async () => {
       try {
         setAssistLoading(true);
         const response = await fetch("/api/purchase-assist", {
-          signal: controller.signal
+          credentials: "include"
         });
         if (!response.ok) {
           return;
@@ -101,7 +98,6 @@ export default function ProfilePage() {
     };
 
     load();
-    return () => controller.abort();
   }, []);
 
   if (error) {

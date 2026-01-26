@@ -48,12 +48,14 @@ const InfiniteMarquee = ({ items, isLoading = false }: InfiniteMarqueeProps) => 
                         className="min-w-[300px] group transition-all duration-500 hover:scale-[1.02]"
                     >
                         <Link href={`/product/${product.id}`} className="block">
-                            <div className="relative h-[380px] w-full overflow-hidden rounded-[2.5rem] shadow-2xl glass-hover">
+                            <div className="relative h-[380px] w-full overflow-hidden rounded-[2.5rem] shadow-2xl glass-hover bg-slate-200">
                                 <Image
                                     src={product.image}
-                                    alt={product.title}
+                                    alt=""
                                     fill
                                     className="object-cover transition-transform duration-700 group-hover:scale-110"
+                                    loading="lazy"
+                                    sizes="300px"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-[#0b224e]/90 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
 

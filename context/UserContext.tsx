@@ -45,7 +45,10 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const refresh = async () => {
     setLoading(true);
     try {
-      const response = await fetch("/api/me", { cache: "no-store" });
+      const response = await fetch("/api/me", {
+        cache: "no-store",
+        credentials: "include"
+      });
       if (!response.ok) {
         setUser(null);
         setPoints(0);
@@ -71,7 +74,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
+        credentials: "include"
       });
       if (!response.ok) {
         const error = await response.json().catch(() => null);

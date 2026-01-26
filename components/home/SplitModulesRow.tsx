@@ -12,7 +12,7 @@ type SplitModulesRowProps = {
 
 const SplitModulesRow = ({ featured, side, className }: SplitModulesRowProps) => {
   return (
-    <section className={cn("section-pad", className)}>
+    <section className={cn("py-8 md:py-16", className)}>
       <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
         <div className="glass-panel p-6 flex flex-col gap-4">
           <div className="relative aspect-[16/9] rounded-2xl overflow-hidden">

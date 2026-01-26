@@ -53,7 +53,10 @@ const mapStripeStatus = (status: Stripe.Subscription.Status) => {
 const getStripeSubscription = async (
   event: Stripe.Event
 ): Promise<Stripe.Subscription | null> => {
-  if (event.type === "customer.subscription.updated") {
+  if (
+    event.type === "customer.subscription.updated" ||
+    event.type === "customer.subscription.deleted"
+  ) {
     return event.data.object as Stripe.Subscription;
   }
 

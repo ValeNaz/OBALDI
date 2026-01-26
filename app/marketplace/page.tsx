@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { FaTimes } from "react-icons/fa";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { useUser } from "../../context/UserContext";
 import { useCart } from "@/context/CartContext";
@@ -41,6 +42,7 @@ const Marketplace = () => {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [sort, setSort] = useState("date-desc");
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Data State
   const [heroData, setHeroData] = useState<HeroSlide[]>([]);
@@ -148,7 +150,7 @@ const Marketplace = () => {
           id: p.id,
           title: p.title,
           description: p.description,
-          image: p.media.find((m: any) => m.type === "IMAGE")?.url ?? "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=600&h=400",
+          image: p.media.find((m: any) => m.type === "IMAGE")?.url ?? "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSIxIiB2aWV3Qm94PSIwIDAgMSAxIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNGMUY1RjkiLz48L3N2Zz4=",
           priceCents: p.priceCents,
           currency: p.currency,
           premiumOnly: p.premiumOnly,
@@ -206,7 +208,7 @@ const Marketplace = () => {
   const isHomeView = !query && activeCategory === "ALL" && !showFullCatalog;
 
   return (
-    <div className="container-max page-pad pt-36 md:pt-44 pb-16 min-h-screen">
+    <div className="container-max page-pad pt-44 md:pt-52 pb-16 min-h-screen">
       {orderSuccess && (
         <div className="mb-8 text-sm text-green-700 font-semibold bg-green-50 border border-green-100 rounded-xl px-4 py-3">
           Pagamento completato! Ti aggiorneremo sullo stato dell&apos;ordine.
@@ -259,18 +261,42 @@ const Marketplace = () => {
         </div>
       ) : (
         /* Full Catalog Mode */
-        <div className="flex flex-col lg:flex-row gap-12 mt-4 animate-fade-in-soft">
-          <CatalogSidebar
-            categories={categories.map(c => ({ ...c, href: c.id === 'ALL' ? '/marketplace' : `/marketplace?cat=${c.id}` }))}
-            activeCategory={activeCategory}
-            onCategoryChange={handleCategoryChange}
-            minPrice={minPrice}
-            maxPrice={maxPrice}
-            onPriceChange={(min, max) => { setMinPrice(min); setMaxPrice(max); }}
-            sort={sort}
-            onSortChange={setSort}
-            onResetFilters={handleResetFilters}
-          />
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 mt-4 animate-fade-in-soft">
+          {/* Mobile Filter Toggle */}
+          <div className="lg:hidden flex justify-between items-center mb-4">
+            <button
+              onClick={() => setShowMobileFilters(true)}
+              className="flex-1 flex items-center justify-center gap-2 py-3 bg-white/70 border border-white/50 rounded-2xl text-xs font-bold text-[#0b224e] shadow-sm active:scale-95 transition-transform"
+            >
+              <span>🔍</span> Filtri e Ordinamento
+            </button>
+          </div>
+
+          <div className={`fixed inset-0 z-[60] lg:relative lg:z-0 lg:block ${showMobileFilters ? 'block' : 'hidden'}`}>
+            <div
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm lg:hidden"
+              onClick={() => setShowMobileFilters(false)}
+            />
+            <div className="absolute right-0 top-0 bottom-0 w-[85%] max-w-sm bg-slate-50 p-6 shadow-2xl lg:p-0 lg:bg-transparent lg:shadow-none lg:w-64 lg:static h-full overflow-y-auto lg:overflow-visible transition-transform">
+              <div className="flex items-center justify-between mb-8 lg:hidden">
+                <h2 className="text-xl font-display font-bold text-[#0b224e]">Filtri</h2>
+                <button onClick={() => setShowMobileFilters(false)} className="p-2 text-slate-400">
+                  <FaTimes size={20} />
+                </button>
+              </div>
+              <CatalogSidebar
+                categories={categories.map(c => ({ ...c, href: c.id === 'ALL' ? '/marketplace' : `/marketplace?cat=${c.id}` }))}
+                activeCategory={activeCategory}
+                onCategoryChange={(id) => { handleCategoryChange(id); setShowMobileFilters(false); }}
+                minPrice={minPrice}
+                maxPrice={maxPrice}
+                onPriceChange={(min, max) => { setMinPrice(min); setMaxPrice(max); }}
+                sort={sort}
+                onSortChange={(s) => { setSort(s); setShowMobileFilters(false); }}
+                onResetFilters={() => { handleResetFilters(); setShowMobileFilters(false); }}
+              />
+            </div>
+          </div>
 
           <div className="flex-1">
             <div className="flex justify-between items-center mb-8">
@@ -294,7 +320,7 @@ const Marketplace = () => {
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
               {catalogLoading ? (
                 Array.from({ length: 9 }).map((_, i) => (
                   <div key={i} className="glass-panel h-80 animate-pulse" />
@@ -303,8 +329,15 @@ const Marketplace = () => {
                 catalogItems.map((product) => (
                   <div key={product.id} className="glass-card overflow-hidden group glass-hover">
                     <Link href={`/product/${product.id}`} className="block">
-                      <div className="relative w-full h-56">
-                        <Image src={product.image} alt={product.title} fill className="object-cover" />
+                      <div className="relative w-full h-56 bg-slate-100">
+                        <Image
+                          src={product.image}
+                          alt=""
+                          fill
+                          className="object-cover"
+                          loading="lazy"
+                          sizes="(max-width: 640px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        />
                       </div>
                       <div className="p-6">
                         <h3 className="font-bold text-lg mb-2 group-hover:text-[#a41f2e] transition">

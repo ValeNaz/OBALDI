@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/src/core/db";
 import { AuthError, requireRole, requireSession } from "@/src/core/auth/guard";
 import { enforceSameOrigin } from "@/src/core/security/csrf";
+import { notifyProductRejected } from "@/lib/notifications";
 
 const schema = z.object({
   note: z.string().max(500).optional()
@@ -65,5 +66,9 @@ export async function POST(
     }
   });
 
+  // Notify seller about product rejection
+  await notifyProductRejected(product.sellerId, product.title, parsed.data.note);
+
   return NextResponse.json({ product: updated });
 }
+

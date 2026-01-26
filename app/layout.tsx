@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     siteName: "Obaldi",
     images: [
       {
-        url: "/media/Hero_Home.png",
+        url: "/media/logo_Obaldi.png",
         width: 1200,
         height: 630,
         alt: "Obaldi"
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Obaldi",
     description: "Consapevolezza. Tutela. Acquisti sensati.",
-    images: ["/media/Hero_Home.png"]
+    images: ["/media/logo_Obaldi.png"]
   }
 };
 

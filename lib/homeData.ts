@@ -65,7 +65,7 @@ export type HistoryItem = {
   image: string;
 };
 
-const heroImage = "/media/Hero_Home.png";
+const heroImage = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSIxIiB2aWV3Qm94PSIwIDAgMSAxIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNGMUY1RjkiLz48L3N2Zz4=";
 
 const makeProduct = (id: number, title: string, priceCents?: number): Product => ({
   id: `prod-${id}`,

@@ -10,6 +10,7 @@ import { getClientIp, rateLimit } from "@/src/core/security/rate-limit";
 import { enforceSameOrigin } from "@/src/core/security/csrf";
 import { sendEmail } from "@/src/core/email/sender";
 import { renderOrderConfirmation } from "@/src/core/email/templates";
+import { notifyOrderCreated } from "@/lib/notifications";
 
 const schema = z.object({
   usePoints: z.boolean().optional(),
@@ -247,6 +248,10 @@ export async function POST(request: Request) {
     } catch {
       // Best-effort email delivery.
     }
+
+    // Send notification for order created
+    await notifyOrderCreated(session.user.id, order.id);
+
     return NextResponse.json({ orderId: order.id, pointsSpent: pointsToUse });
   }
 

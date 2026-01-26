@@ -37,7 +37,7 @@ const PromoModuleGrid = ({ modules }: PromoModuleGridProps) => {
           {module.kind === "event" && (
             <div className="relative aspect-[4/3] rounded-2xl overflow-hidden">
               <Image
-                src={module.items[0]?.image ?? "/media/Hero_Home.png"}
+                src={module.items[0]?.image ?? "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSIxIiB2aWV3Qm94PSIwIDAgMSAxIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNGMUY1RjkiLz48L3N2Zz4="}
                 alt={module.title}
                 fill
                 sizes="240px"
@@ -77,7 +77,7 @@ const PromoModuleGrid = ({ modules }: PromoModuleGridProps) => {
           {module.kind === "video" && (
             <div className="relative aspect-[4/3] rounded-2xl overflow-hidden">
               <Image
-                src={module.items[0]?.image ?? "/media/Hero_Home.png"}
+                src={module.items[0]?.image ?? "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSIxIiB2aWV3Qm94PSIwIDAgMSAxIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNGMUY1RjkiLz48L3N2Zz4="}
                 alt={module.title}
                 fill
                 sizes="240px"

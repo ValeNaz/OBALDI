@@ -30,12 +30,12 @@ export default function OrdersPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const controller = new AbortController();
-
     const load = async () => {
       try {
         setLoading(true);
-        const response = await fetch("/api/orders", { signal: controller.signal });
+        const response = await fetch("/api/orders", {
+          credentials: "include"
+        });
         const payload = await response.json().catch(() => null);
         if (!response.ok) {
           setError(payload?.error?.message ?? "Impossibile caricare gli ordini.");
@@ -50,7 +50,6 @@ export default function OrdersPage() {
     };
 
     load();
-    return () => controller.abort();
   }, []);
 
   return (

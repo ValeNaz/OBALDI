@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import type { Product } from "@/lib/homeData";
+import { FaCoins } from "react-icons/fa";
 
 type ProductCardProps = {
   product: Product;
@@ -29,13 +30,14 @@ const ProductCard = ({ product, variant }: ProductCardProps) => {
         variant === "compact" ? "w-[220px]" : "w-[280px]"
       )}
     >
-      <div className="relative w-full aspect-[4/3] overflow-hidden">
+      <div className="relative w-full aspect-[4/3] overflow-hidden bg-slate-100">
         <Image
           src={product.image}
-          alt={product.title}
+          alt=""
           fill
           sizes="(max-width: 768px) 60vw, 20vw"
           className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+          loading="lazy"
         />
         {(product.badge || product.premiumOnly) && (
           <span
@@ -74,8 +76,8 @@ const ProductCard = ({ product, variant }: ProductCardProps) => {
           <div className="flex flex-col">
             <span className="text-sm font-bold text-[#0b224e]">{price ?? "—"}</span>
             {product.pointsEligible && product.pointsPrice && (
-              <span className="text-[10px] font-medium text-slate-500">
-                🪙 {product.pointsPrice} punti
+              <span className="text-[10px] font-medium text-slate-500 flex items-center gap-1">
+                <FaCoins className="text-amber-600" /> {product.pointsPrice} punti
               </span>
             )}
           </div>

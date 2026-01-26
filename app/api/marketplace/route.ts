@@ -94,7 +94,7 @@ export async function GET(request: Request) {
             id: p.id,
             title: p.title,
             description: p.description,
-            image: p.media[0]?.url ?? "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=600&h=400",
+            image: p.media[0]?.url ?? "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSIxIiB2aWV3Qm94PSIwIDAgMSAxIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNGMUY1RjkiLz48L3N2Zz4=",
             priceCents: p.priceCents,
             currency: p.currency,
             premiumOnly: p.premiumOnly,
