@@ -99,13 +99,15 @@ type AdminUser = {
 
 // ... (imports)
 import ProductForm from "@/components/dashboard/ProductForm";
+import AnalyticsDashboard from "@/components/admin/AnalyticsDashboard";
+import { FaChartLine } from "react-icons/fa";
 
 // ... (existing types)
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState<
-    "products" | "catalog" | "changes" | "assist" | "orders" | "audit" | "news" | "users"
-  >("products");
+    "overview" | "products" | "catalog" | "changes" | "assist" | "orders" | "audit" | "news" | "users"
+  >("overview");
 
   const [pending, setPending] = useState<PendingProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -693,6 +695,19 @@ const AdminDashboard = () => {
         <div className="lg:col-span-1 space-y-4">
           <nav className="space-y-2 glass-panel p-4">
             <button
+              className={`w-full text-left p-3 rounded-xl font-bold flex items-center gap-3 transition ${activeTab === "overview"
+                ? "bg-[#0b224e] text-white shadow-lg"
+                : "hover:bg-white/60 text-slate-500"
+                }`}
+              onClick={() => setActiveTab("overview")}
+            >
+              <FaChartLine size={18} />
+              <span>Dashboard</span>
+            </button>
+
+            <div className="h-px bg-slate-200 my-2" />
+
+            <button
               className={`w-full text-left p-3 rounded-xl font-bold ${activeTab === "products"
                 ? "bg-white/80 text-slate-900"
                 : "hover:bg-white/60 text-slate-500"
@@ -768,6 +783,12 @@ const AdminDashboard = () => {
         </div>
 
         <div className="lg:col-span-3">
+          {activeTab === "overview" && (
+            <div className="glass-panel p-6">
+              <AnalyticsDashboard />
+            </div>
+          )}
+
           {activeTab === "catalog" ? (
             <div className="glass-panel overflow-hidden">
               <div className="p-6 border-b border-white/70 flex justify-between items-center">
@@ -1490,48 +1511,50 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {showProductForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-            <ProductForm
-              role="ADMIN"
-              initialData={editingProduct ? {
-                id: editingProduct.id,
-                title: editingProduct.title,
-                description: editingProduct.description,
-                priceCents: editingProduct.priceCents,
-                premiumOnly: editingProduct.premiumOnly,
-                pointsEligible: editingProduct.pointsEligible,
-                pointsPrice: editingProduct.pointsPrice,
-                specsJson: typeof editingProduct.specsJson === 'string' ? editingProduct.specsJson : JSON.stringify(editingProduct.specsJson),
-                category: editingProduct.category,
-                isFeatured: editingProduct.isFeatured,
-                isHero: editingProduct.isHero,
-                isPromo: editingProduct.isPromo,
-                isSplit: editingProduct.isSplit,
-                isCarousel: editingProduct.isCarousel,
-                isCollection: editingProduct.isCollection,
-                adminTag: editingProduct.adminTag,
-                images: editingProduct.media // Assuming API returns media
-              } : undefined}
-              onSubmit={async (data) => {
-                const saved = await handleProductSubmit(data);
-                if (saved) {
-                  // If new product created, we might want to keep modal open to add images (ProductForm handles partial state updates, but we need to update editingProduct here too)
-                  setEditingProduct(saved);
-                  // But if user clicked "Chiudi" inside ProductForm, onCancel is called.
-                  // ProductForm logic: "Crea e procedi" -> calls onSubmit. 
-                  // If successful, returns saved product.
-                  // We updated editingProduct inside ProductForm? No, ProductForm has internal state.
-                  // But for the modal to "switch" to "edit mode" data context if closed/reopened, we set editingProduct.
-                }
-              }}
-              onCancel={() => setShowProductForm(false)}
-            />
+      {
+        showProductForm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+            <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+              <ProductForm
+                role="ADMIN"
+                initialData={editingProduct ? {
+                  id: editingProduct.id,
+                  title: editingProduct.title,
+                  description: editingProduct.description,
+                  priceCents: editingProduct.priceCents,
+                  premiumOnly: editingProduct.premiumOnly,
+                  pointsEligible: editingProduct.pointsEligible,
+                  pointsPrice: editingProduct.pointsPrice,
+                  specsJson: typeof editingProduct.specsJson === 'string' ? editingProduct.specsJson : JSON.stringify(editingProduct.specsJson),
+                  category: editingProduct.category,
+                  isFeatured: editingProduct.isFeatured,
+                  isHero: editingProduct.isHero,
+                  isPromo: editingProduct.isPromo,
+                  isSplit: editingProduct.isSplit,
+                  isCarousel: editingProduct.isCarousel,
+                  isCollection: editingProduct.isCollection,
+                  adminTag: editingProduct.adminTag,
+                  images: editingProduct.media // Assuming API returns media
+                } : undefined}
+                onSubmit={async (data) => {
+                  const saved = await handleProductSubmit(data);
+                  if (saved) {
+                    // If new product created, we might want to keep modal open to add images (ProductForm handles partial state updates, but we need to update editingProduct here too)
+                    setEditingProduct(saved);
+                    // But if user clicked "Chiudi" inside ProductForm, onCancel is called.
+                    // ProductForm logic: "Crea e procedi" -> calls onSubmit. 
+                    // If successful, returns saved product.
+                    // We updated editingProduct inside ProductForm? No, ProductForm has internal state.
+                    // But for the modal to "switch" to "edit mode" data context if closed/reopened, we set editingProduct.
+                  }
+                }}
+                onCancel={() => setShowProductForm(false)}
+              />
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 };
 

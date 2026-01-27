@@ -11,9 +11,12 @@ import { enforceSameOrigin } from "@/src/core/security/csrf";
 import { sendEmail } from "@/src/core/email/sender";
 import { renderOrderConfirmation } from "@/src/core/email/templates";
 import { notifyOrderCreated } from "@/lib/notifications";
+import { InventoryReason } from "@prisma/client";
 
 const schema = z.object({
   usePoints: z.boolean().optional(),
+  shippingAddressId: z.string().uuid().optional(),
+  couponCode: z.string().max(30).optional(),
   items: z
     .array(
       z.object({
@@ -117,6 +120,19 @@ export async function POST(request: Request) {
     );
   }
 
+  // Validate Shipping Address
+  if (parsed.data.shippingAddressId) {
+    const address = await prisma.address.findUnique({
+      where: { id: parsed.data.shippingAddressId }
+    });
+    if (!address || address.userId !== session.user.id) {
+      return NextResponse.json(
+        { error: { code: "INVALID_ADDRESS", message: "Invalid shipping address." } },
+        { status: 400 }
+      );
+    }
+  }
+
   const currency = products[0]?.currency ?? "EUR";
   let totalCents = 0;
   let pointsCap = 0;
@@ -135,6 +151,14 @@ export async function POST(request: Request) {
     if (product.isOutOfStock) {
       return NextResponse.json(
         { error: { code: "OUT_OF_STOCK", message: "Product out of stock." } },
+        { status: 400 }
+      );
+    }
+
+    // Inventory Check
+    if (product.trackInventory && product.stockQty < qty) {
+      return NextResponse.json(
+        { error: { code: "INSUFFICIENT_STOCK", message: `Not enough stock for ${product.title}.` } },
         { status: 400 }
       );
     }
@@ -162,6 +186,53 @@ export async function POST(request: Request) {
     }
   }
 
+  // Validate Coupon
+  let coupon = null;
+  let discountCents = 0;
+
+  if (parsed.data.couponCode) {
+    coupon = await prisma.coupon.findUnique({
+      where: { code: parsed.data.couponCode.toUpperCase() }
+    });
+
+    if (!coupon || !coupon.isActive) {
+      return NextResponse.json(
+        { error: { code: "INVALID_COUPON", message: "Invalid or inactive coupon." } },
+        { status: 400 }
+      );
+    }
+
+    // Validate coupon constraints
+    const now = new Date();
+    if (coupon.validFrom && now < coupon.validFrom) {
+      return NextResponse.json({ error: { code: "COUPON_NOT_STARTED", message: "Coupon not yet valid." } }, { status: 400 });
+    }
+    if (coupon.validUntil && now > coupon.validUntil) {
+      return NextResponse.json({ error: { code: "COUPON_EXPIRED", message: "Coupon expired." } }, { status: 400 });
+    }
+    if (coupon.maxUses && coupon.usedCount >= coupon.maxUses) {
+      return NextResponse.json({ error: { code: "COUPON_LIMIT_REACHED", message: "Coupon usage limit reached." } }, { status: 400 });
+    }
+    if (coupon.minOrderCents && totalCents < coupon.minOrderCents) {
+      return NextResponse.json({ error: { code: "COUPON_MIN_ORDER", message: "Minimum order amount not met." } }, { status: 400 });
+    }
+
+    // Calculate discount
+    if (coupon.type === "PERCENTAGE") {
+      discountCents = Math.floor(totalCents * coupon.value / 10000);
+    } else {
+      discountCents = coupon.value;
+    }
+
+    if (coupon.maxDiscountCents && discountCents > coupon.maxDiscountCents) {
+      discountCents = coupon.maxDiscountCents;
+    }
+
+    if (discountCents > totalCents) {
+      discountCents = totalCents;
+    }
+  }
+
   let order;
   let pointsToUse = 0;
   let remainingCents = totalCents;
@@ -175,18 +246,30 @@ export async function POST(request: Request) {
         const appliedPoints = parsed.data.usePoints
           ? Math.min(pointsCap, availablePoints)
           : 0;
-        const remaining = totalCents - appliedPoints * 100;
+        // Apply discount first, then points
+        const afterDiscount = totalCents - discountCents;
+        const finalRemaining = afterDiscount - appliedPoints * 100;
+
+        // Ensure not negative
+        const toPay = Math.max(0, finalRemaining);
 
         const createdOrder = await tx.order.create({
           data: {
             userId: session.user.id,
-            status: remaining <= 0 ? "PAID" : "CREATED",
-            totalCents,
+            status: toPay <= 0 ? "PAID" : "CREATED",
+            totalCents: afterDiscount, // Store the post-discount total as the effective order total? Or keep original? Usually total is final amount. Let's store total to pay.
+            // Actually, usually totalCents is the sum of items, and we have a discount field.
+            // But for simplicity let's stick to the schema: totalCents is what user owes?
+            // Let's keep totalCents as the GROSS total, and we have discountCents.
+            totalCents: totalCents,
+            discountCents: discountCents,
+            couponId: coupon?.id,
             currency,
-            paidWith: appliedPoints > 0 ? (remaining > 0 ? "MIXED" : "POINTS") : "MONEY",
+            paidWith: appliedPoints > 0 ? (toPay > 0 ? "MIXED" : "POINTS") : "MONEY",
             pointsSpent: appliedPoints,
             shippingIncluded: true,
             provider: "STRIPE",
+            shippingAddressId: parsed.data.shippingAddressId,
             items: {
               create: products.map((product) => ({
                 productId: product.id,
@@ -198,7 +281,44 @@ export async function POST(request: Request) {
           }
         });
 
-        if (remaining <= 0 && appliedPoints > 0) {
+        // Decrement Inventory & Record Movement
+        for (const product of products) {
+          if (product.trackInventory) {
+            const qty = itemMap.get(product.id) ?? 1;
+            await tx.product.update({
+              where: { id: product.id },
+              data: {
+                stockQty: { decrement: qty },
+                isOutOfStock: product.stockQty - qty <= 0 // Simplified check, ideally re-check
+              }
+            });
+            await tx.inventoryMovement.create({
+              data: {
+                productId: product.id,
+                delta: -qty,
+                reason: InventoryReason.ORDER,
+                orderId: createdOrder.id
+              }
+            });
+          }
+        }
+
+        // Increment Coupon Usage
+        if (coupon) {
+          await tx.coupon.update({
+            where: { id: coupon.id },
+            data: { usedCount: { increment: 1 } }
+          });
+          await tx.couponUsage.create({
+            data: {
+              couponId: coupon.id,
+              userId: session.user.id,
+              orderId: createdOrder.id
+            }
+          });
+        }
+
+        if (toPay <= 0 && appliedPoints > 0) {
           await tx.pointsLedger.create({
             data: {
               userId: session.user.id,
@@ -210,7 +330,7 @@ export async function POST(request: Request) {
           });
         }
 
-        return { createdOrder, remaining, appliedPoints };
+        return { createdOrder, remaining: toPay, appliedPoints };
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
     );

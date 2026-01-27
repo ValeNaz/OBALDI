@@ -257,11 +257,14 @@ const Header = () => {
 
                 {user ? (
                   <div className="flex items-center space-x-1 md:space-x-2">
-                    {user.isPremium && (
-                      <div className="hidden sm:flex lg:hidden items-center bg-white/70 px-3 py-1.5 rounded-full border border-amber-200/60 text-[10px] font-bold text-amber-900 shadow-sm">
-                        <span>🪙</span> {points}
-                      </div>
-                    )}
+                    {/* Punti - visibili per tutti gli utenti loggati */}
+                    <Link
+                      href="/profile"
+                      className="flex items-center bg-white/70 px-3 py-1.5 rounded-full border border-amber-200/60 text-[10px] md:text-xs font-bold text-amber-900 shadow-sm hover:bg-amber-50 transition-colors"
+                    >
+                      <FaCoins className="mr-1.5 text-amber-600" />
+                      <span>{points}</span>
+                    </Link>
                     <NotificationBell />
                     <UserMenu />
                   </div>

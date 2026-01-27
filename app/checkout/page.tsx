@@ -5,17 +5,26 @@ import Image from "next/image";
 import Link from "next/link";
 import { useUser } from "@/context/UserContext";
 import { useCart } from "@/context/CartContext";
+import AddressSelector from "@/components/checkout/AddressSelector";
+import CouponInput from "@/components/checkout/CouponInput";
 
 const CheckoutPage = () => {
   const { user, points } = useUser();
   const { items, updateQty, removeItem, clearCart } = useCart();
   const [usePoints, setUsePoints] = useState(true);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [checkoutMessage, setCheckoutMessage] = useState<string | null>(null);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
+  // Coupon State
+  const [couponCode, setCouponCode] = useState<string | null>(null);
+  const [discountCents, setDiscountCents] = useState(0);
+
   const totals = useMemo(() => {
     const totalCents = items.reduce((sum, item) => sum + item.priceCents * item.qty, 0);
+    const afterDiscount = Math.max(0, totalCents - discountCents);
+
     const pointsCap = items.reduce((sum, item) => {
       if (!item.pointsEligible || !item.pointsPrice) return sum;
       const maxByPrice = Math.floor(item.priceCents / 100);
@@ -23,21 +32,62 @@ const CheckoutPage = () => {
       const perUnit = Math.min(maxByPrice, maxByProduct);
       return sum + perUnit * item.qty;
     }, 0);
-    const pointsToUse =
-      user?.isPremium && usePoints ? Math.min(pointsCap, points) : 0;
-    const remainingCents = Math.max(0, totalCents - pointsToUse * 100);
-    return { totalCents, pointsCap, pointsToUse, remainingCents };
-  }, [items, points, usePoints, user?.isPremium]);
+
+    const pointsToUse = user?.isPremium && usePoints ? Math.min(pointsCap, points) : 0;
+
+    // Apply discount first, then points
+    // But points cover "remaining" amount.
+    // Logic in backend: remaining = total - discount - points*100
+
+    const remainingCents = Math.max(0, afterDiscount - (pointsToUse * 100));
+
+    return { totalCents, afterDiscount, pointsCap, pointsToUse, remainingCents };
+  }, [items, points, usePoints, user?.isPremium, discountCents]);
+
+  const handleApplyCoupon = async (code: string) => {
+    try {
+      const response = await fetch("/api/checkout/validate-coupon", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code,
+          orderTotalCents: items.reduce((sum, item) => sum + item.priceCents * item.qty, 0)
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.error?.message || "Coupon non valido");
+      }
+
+      setDiscountCents(data.discountCents);
+      setCouponCode(data.coupon.code);
+      return true;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setCouponCode(null);
+    setDiscountCents(0);
+  };
 
   const handleCheckout = async () => {
     setCheckoutError(null);
     setCheckoutMessage(null);
+
     if (!user?.isMember) {
       setCheckoutError("Per acquistare devi essere membro Obaldi.");
       return;
     }
     if (items.length === 0) {
       setCheckoutError("Il carrello e vuoto.");
+      return;
+    }
+
+    if (!selectedAddressId) {
+      setCheckoutError("Seleziona un indirizzo di spedizione.");
       return;
     }
 
@@ -48,6 +98,8 @@ const CheckoutPage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           usePoints: user.isPremium && usePoints,
+          shippingAddressId: selectedAddressId,
+          couponCode: couponCode,
           items: items.map((item) => ({ productId: item.productId, qty: item.qty }))
         })
       });
@@ -104,9 +156,20 @@ const CheckoutPage = () => {
       ) : (
         <div className="grid gap-8 lg:grid-cols-[2fr,1fr]">
           <div className="space-y-6">
+            {/* Address Selector */}
+            {user?.isMember && (
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                <AddressSelector
+                  selectedAddressId={selectedAddressId}
+                  onSelect={setSelectedAddressId}
+                />
+              </div>
+            )}
+
+            {/* Cart Items */}
             {items.map((item) => (
               <div key={item.productId} className="glass-panel p-6 flex flex-col md:flex-row gap-6">
-                <div className="relative w-full md:w-40 aspect-[4/3] rounded-2xl overflow-hidden">
+                <div className="relative w-full md:w-40 aspect-[4/3] rounded-2xl overflow-hidden bg-slate-100">
                   <Image src={item.image} alt={item.title} fill sizes="200px" className="object-cover" />
                 </div>
                 <div className="flex-1 flex flex-col gap-3">
@@ -161,30 +224,50 @@ const CheckoutPage = () => {
 
           <div className="glass-panel p-6 h-fit space-y-5">
             <h2 className="text-xl font-semibold text-[#0b224e]">Riepilogo</h2>
-            <div className="space-y-2 text-sm text-slate-600">
+
+            <div className="space-y-3 text-sm text-slate-600 pb-4 border-b border-slate-100">
               <div className="flex justify-between">
                 <span>Totale prodotti</span>
                 <span>€{(totals.totalCents / 100).toFixed(2)}</span>
               </div>
+
+              {discountCents > 0 && (
+                <div className="flex justify-between text-green-600 font-semibold">
+                  <span>Sconto Coupon</span>
+                  <span>-€{(discountCents / 100).toFixed(2)}</span>
+                </div>
+              )}
+
               <div className="flex justify-between">
                 <span>Punti applicabili</span>
                 <span>{totals.pointsCap}</span>
               </div>
-              <div className="flex justify-between font-semibold text-[#0b224e]">
-                <span>Saldo finale</span>
+
+              <div className="flex justify-between font-semibold text-[#0b224e] text-lg pt-2 border-t border-slate-100">
+                <span>Totale da pagare</span>
                 <span>€{(totals.remainingCents / 100).toFixed(2)}</span>
               </div>
             </div>
 
-            <label className="flex items-center gap-3 text-sm text-slate-600">
-              <input
-                type="checkbox"
-                checked={usePoints}
-                onChange={(event) => setUsePoints(event.target.checked)}
-                disabled={!user?.isPremium || totals.pointsCap === 0}
-              />
-              Usa punti disponibili ({points})
-            </label>
+            {/* Points Usage */}
+            {user?.isPremium && totals.pointsCap > 0 && (
+              <label className="flex items-center gap-3 text-sm text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100 cursor-pointer hover:bg-slate-100 transition">
+                <input
+                  type="checkbox"
+                  checked={usePoints}
+                  onChange={(event) => setUsePoints(event.target.checked)}
+                  className="rounded border-slate-300 text-[#0b224e] focus:ring-[#0b224e]"
+                />
+                <span>Usa punti disponibili ({points})</span>
+              </label>
+            )}
+
+            {/* Coupon Input */}
+            <CouponInput
+              onApply={handleApplyCoupon}
+              onRemove={handleRemoveCoupon}
+              orderTotalCents={totals.totalCents}
+            />
 
             {checkoutError && (
               <div className="text-sm text-red-600 font-semibold bg-red-50 border border-red-100 rounded-xl px-4 py-3">
@@ -196,13 +279,14 @@ const CheckoutPage = () => {
                 {checkoutMessage}
               </div>
             )}
+
             <button
               type="button"
               onClick={handleCheckout}
-              disabled={checkoutLoading}
-              className="w-full py-3 rounded-full bg-[#0b224e] text-white font-semibold hover:bg-[#1a3a6e] disabled:opacity-60"
+              disabled={checkoutLoading || items.length === 0}
+              className="w-full py-3 rounded-full bg-[#0b224e] text-white font-semibold hover:bg-[#1a3a6e] disabled:opacity-60 hover:shadow-lg transition transform hover:-translate-y-0.5 active:translate-y-0"
             >
-              {checkoutLoading ? "Checkout in corso..." : "Procedi al checkout"}
+              {checkoutLoading ? "Checkout in corso..." : "Procedi al pagamento"}
             </button>
             <button
               type="button"

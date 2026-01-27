@@ -116,6 +116,30 @@ enum PurchaseAssistStatus {
   DONE
 }
 
+enum ShipmentStatus {
+  PENDING
+  LABEL_CREATED
+  SHIPPED
+  IN_TRANSIT
+  OUT_FOR_DELIVERY
+  DELIVERED
+  FAILED
+  RETURNED
+}
+
+enum CouponType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum InventoryReason {
+  ORDER
+  RESTOCK
+  ADJUSTMENT
+  RETURN
+  CANCEL
+}
+
 model User {
   id              String    @id @default(uuid()) @db.Uuid
   email           String    @unique
@@ -142,6 +166,9 @@ model User {
   passwordResetTokens    PasswordResetToken[]
   notifications          Notification[]
   settings               UserSettings?
+  addresses              Address[]
+  reviews                Review[]
+  wishlistItems          WishlistItem[]
 
   @@map("users")
 }
@@ -267,13 +294,20 @@ model Product {
   isCarousel     Boolean         @default(false)
   isCollection   Boolean         @default(false)
   adminTag       String?
+  // Inventory tracking
+  stockQty       Int           @default(0)
+  lowStockAlert  Int           @default(5)
+  trackInventory Boolean       @default(true)
   createdAt      DateTime      @default(now()) @db.Timestamptz(6)
   updatedAt      DateTime      @updatedAt @db.Timestamptz(6)
 
-  seller         User                 @relation(fields: [sellerId], references: [id])
-  media          ProductMedia[]
-  changeRequests ProductChangeRequest[]
-  orderItems     OrderItem[]
+  seller              User                   @relation(fields: [sellerId], references: [id])
+  media               ProductMedia[]
+  changeRequests      ProductChangeRequest[]
+  orderItems          OrderItem[]
+  inventoryMovements  InventoryMovement[]
+  reviews             Review[]
+  wishlistItems       WishlistItem[]
 
   @@index([status])
   @@index([sellerId])
@@ -314,21 +348,30 @@ model ProductChangeRequest {
 }
 
 model Order {
-  id                String       @id @default(uuid()) @db.Uuid
-  userId            String       @db.Uuid
-  status            OrderStatus
-  totalCents        Int
-  currency          String       @default("EUR")
-  paidWith          OrderPaidWith
-  pointsSpent       Int          @default(0)
-  shippingIncluded  Boolean      @default(true)
-  provider          Provider
-  providerPaymentId String?
-  createdAt         DateTime     @default(now()) @db.Timestamptz(6)
-  updatedAt         DateTime     @updatedAt @db.Timestamptz(6)
+  id                  String        @id @default(uuid()) @db.Uuid
+  userId              String        @db.Uuid
+  status              OrderStatus
+  totalCents          Int
+  currency            String        @default("EUR")
+  paidWith            OrderPaidWith
+  pointsSpent         Int           @default(0)
+  shippingIncluded    Boolean       @default(true)
+  provider            Provider
+  providerPaymentId   String?
+  // Shipping address
+  shippingAddressId   String?       @db.Uuid
+  // Coupon/discount
+  couponId            String?       @db.Uuid
+  discountCents       Int           @default(0)
+  createdAt           DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt           DateTime      @updatedAt @db.Timestamptz(6)
 
-  user  User        @relation(fields: [userId], references: [id])
-  items OrderItem[]
+  user            User        @relation(fields: [userId], references: [id])
+  items           OrderItem[]
+  shippingAddress Address?    @relation(fields: [shippingAddressId], references: [id])
+  coupon          Coupon?     @relation(fields: [couponId], references: [id])
+  shipment        Shipment?
+  reviews         Review[]
 
   @@index([userId, createdAt])
   @@map("orders")
@@ -463,4 +506,134 @@ model ProductView {
   @@index([userId, createdAt])
   @@index([productId])
   @@map("product_views")
+}
+
+// ========================================
+// NEW MODELS - Backend Improvements
+// ========================================
+
+model Address {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @db.Uuid
+  label       String?
+  fullName    String
+  line1       String
+  line2       String?
+  city        String
+  province    String
+  postalCode  String
+  country     String   @default("IT")
+  phone       String?
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(6)
+
+  user   User    @relation(fields: [userId], references: [id])
+  orders Order[]
+
+  @@index([userId])
+  @@map("addresses")
+}
+
+model Shipment {
+  id            String          @id @default(uuid()) @db.Uuid
+  orderId       String          @unique @db.Uuid
+  carrier       String?
+  trackingCode  String?
+  trackingUrl   String?
+  status        ShipmentStatus  @default(PENDING)
+  estimatedAt   DateTime?       @db.Timestamptz(6)
+  shippedAt     DateTime?       @db.Timestamptz(6)
+  deliveredAt   DateTime?       @db.Timestamptz(6)
+  createdAt     DateTime        @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime        @updatedAt @db.Timestamptz(6)
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@map("shipments")
+}
+
+model Review {
+  id          String   @id @default(uuid()) @db.Uuid
+  productId   String   @db.Uuid
+  userId      String   @db.Uuid
+  orderId     String   @db.Uuid
+  rating      Int      // 1-5
+  title       String?
+  body        String?
+  isVerified  Boolean  @default(true)
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(6)
+
+  product Product @relation(fields: [productId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+  order   Order   @relation(fields: [orderId], references: [id])
+
+  @@unique([userId, productId])
+  @@index([productId, createdAt])
+  @@map("reviews")
+}
+
+model WishlistItem {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  productId String   @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@map("wishlist_items")
+}
+
+model Coupon {
+  id               String      @id @default(uuid()) @db.Uuid
+  code             String      @unique
+  type             CouponType
+  value            Int         // cents for FIXED_AMOUNT, percentage*100 for PERCENTAGE
+  minOrderCents    Int?
+  maxDiscountCents Int?
+  maxUses          Int?
+  usedCount        Int         @default(0)
+  validFrom        DateTime?   @db.Timestamptz(6)
+  validUntil       DateTime?   @db.Timestamptz(6)
+  isActive         Boolean     @default(true)
+  createdAt        DateTime    @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime    @updatedAt @db.Timestamptz(6)
+
+  usages CouponUsage[]
+  orders Order[]
+
+  @@map("coupons")
+}
+
+model CouponUsage {
+  id        String   @id @default(uuid()) @db.Uuid
+  couponId  String   @db.Uuid
+  orderId   String   @db.Uuid
+  userId    String   @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+
+  coupon Coupon @relation(fields: [couponId], references: [id])
+
+  @@unique([couponId, orderId])
+  @@index([userId])
+  @@map("coupon_usages")
+}
+
+model InventoryMovement {
+  id        String          @id @default(uuid()) @db.Uuid
+  productId String          @db.Uuid
+  delta     Int             // positive = restock, negative = sold/adjustment
+  reason    InventoryReason
+  orderId   String?         @db.Uuid
+  note      String?
+  createdAt DateTime        @default(now()) @db.Timestamptz(6)
+
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([productId, createdAt])
+  @@map("inventory_movements")
 }

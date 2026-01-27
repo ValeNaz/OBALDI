@@ -79,7 +79,10 @@ export default async function ProductPage({ params }: PageProps) {
           premiumOnly: product.premiumOnly,
           pointsEligible: product.pointsEligible,
           pointsPrice: product.pointsPrice,
-          media: product.media
+          media: product.media,
+          stockQty: product.stockQty,
+          trackInventory: product.trackInventory,
+          isOutOfStock: product.isOutOfStock
         }}
       />
     </>

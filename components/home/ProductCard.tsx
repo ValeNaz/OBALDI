@@ -76,8 +76,8 @@ const ProductCard = ({ product, variant }: ProductCardProps) => {
           <div className="flex flex-col">
             <span className="text-sm font-bold text-[#0b224e]">{price ?? "—"}</span>
             {product.pointsEligible && product.pointsPrice && (
-              <span className="text-[10px] font-medium text-slate-500 flex items-center gap-1">
-                <FaCoins className="text-amber-600" /> {product.pointsPrice} punti
+              <span className="text-[10px] font-medium text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-full flex items-center gap-1">
+                <FaCoins className="text-amber-600" /> max {product.pointsPrice}
               </span>
             )}
           </div>

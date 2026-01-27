@@ -208,7 +208,7 @@ const Marketplace = () => {
   const isHomeView = !query && activeCategory === "ALL" && !showFullCatalog;
 
   return (
-    <div className="container-max page-pad pt-44 md:pt-52 pb-16 min-h-screen">
+    <div className="container-max page-pad pt-36 md:pt-40 pb-12 min-h-screen">
       {orderSuccess && (
         <div className="mb-8 text-sm text-green-700 font-semibold bg-green-50 border border-green-100 rounded-xl px-4 py-3">
           Pagamento completato! Ti aggiorneremo sullo stato dell&apos;ordine.
@@ -216,42 +216,58 @@ const Marketplace = () => {
       )}
 
       {isHomeView ? (
-        <div className="animate-fade-in-soft flex flex-col gap-2">
-          <HeroCarousel slides={heroData} className="py-4 md:py-6" />
+        <div className="animate-fade-in-soft flex flex-col gap-4 md:gap-5">
+          {/* Hero Carousel */}
+          <section className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <HeroCarousel slides={heroData} className="py-4 md:py-5" />
+          </section>
 
+          {/* Promo Modules */}
           {promoData.length > 0 && (
-            <section className="py-4 md:py-6">
+            <section className="bg-white rounded-2xl p-4 md:p-5 shadow-sm">
+              <h2 className="text-lg font-display font-bold text-[#0b224e] mb-4">Consigliati per te</h2>
               <PromoModuleGrid modules={promoData} />
             </section>
           )}
 
+          {/* Split Modules */}
           {splitData.featured && (
-            <SplitModulesRow featured={splitData.featured} side={splitData.side} className="py-4 md:py-6" />
+            <section className="bg-gradient-to-br from-slate-50 to-white rounded-2xl p-4 md:p-5 shadow-sm border border-slate-100">
+              <SplitModulesRow featured={splitData.featured} side={splitData.side} />
+            </section>
           )}
 
-          {carouselSectionsData.map((section) => (
-            <ProductCarouselSection key={section.id} section={section} className="py-4 md:py-6" />
-          ))}
+          {/* Product Carousels */}
+          {carouselSectionsData.length > 0 && (
+            <section className="bg-white rounded-2xl p-4 md:p-5 shadow-sm">
+              <div className="flex flex-col gap-5">
+                {carouselSectionsData.map((section) => (
+                  <ProductCarouselSection key={section.id} section={section} />
+                ))}
+              </div>
+            </section>
+          )}
 
+          {/* Collection Modules */}
           {collectionModulesData.length > 0 && (
-            <section className="py-4 md:py-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-semibold text-[#0b224e]">Collezioni in evidenza</h2>
+            <section className="bg-gradient-to-br from-[#0b224e] to-[#1a3a6e] rounded-2xl p-4 md:p-5 shadow-lg">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-display font-bold text-white">Collezioni in evidenza</h2>
               </div>
               <PromoModuleGrid modules={collectionModulesData} />
             </section>
           )}
 
           {/* Catalog Preview as Marquee */}
-          <section className="py-8" id="catalogo">
-            <div className="flex justify-between items-end mb-8">
+          <section className="bg-white rounded-2xl p-4 md:p-5 shadow-sm" id="catalogo">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-5 gap-3">
               <div>
-                <h2 className="text-3xl font-display font-bold text-[#0b224e]">Vetrina Marketplace</h2>
-                <p className="text-slate-500 text-sm mt-2">I prodotti più desiderati della nostra community.</p>
+                <h2 className="text-xl font-display font-bold text-[#0b224e]">Vetrina Marketplace</h2>
+                <p className="text-slate-500 text-xs mt-1">I prodotti più desiderati della nostra community.</p>
               </div>
               <button
                 onClick={() => setShowFullCatalog(true)}
-                className="bg-[#0b224e] text-white px-8 py-3 rounded-full font-bold hover:shadow-glow-soft transition text-sm"
+                className="bg-[#0b224e] text-white px-5 py-2 rounded-full font-bold hover:shadow-glow-soft transition text-xs whitespace-nowrap"
               >
                 Visualizza tutto →
               </button>
@@ -261,120 +277,126 @@ const Marketplace = () => {
         </div>
       ) : (
         /* Full Catalog Mode */
-        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 mt-4 animate-fade-in-soft">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-5 mt-2 animate-fade-in-soft">
           {/* Mobile Filter Toggle */}
-          <div className="lg:hidden flex justify-between items-center mb-4">
+          <div className="lg:hidden flex justify-between items-center">
             <button
               onClick={() => setShowMobileFilters(true)}
-              className="flex-1 flex items-center justify-center gap-2 py-3 bg-white/70 border border-white/50 rounded-2xl text-xs font-bold text-[#0b224e] shadow-sm active:scale-95 transition-transform"
+              className="flex-1 flex items-center justify-center gap-2 py-3 bg-white border border-slate-100 rounded-2xl text-xs font-bold text-[#0b224e] shadow-sm active:scale-95 transition-transform"
             >
               <span>🔍</span> Filtri e Ordinamento
             </button>
           </div>
 
+          {/* Sidebar */}
           <div className={`fixed inset-0 z-[60] lg:relative lg:z-0 lg:block ${showMobileFilters ? 'block' : 'hidden'}`}>
             <div
               className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm lg:hidden"
               onClick={() => setShowMobileFilters(false)}
             />
-            <div className="absolute right-0 top-0 bottom-0 w-[85%] max-w-sm bg-slate-50 p-6 shadow-2xl lg:p-0 lg:bg-transparent lg:shadow-none lg:w-64 lg:static h-full overflow-y-auto lg:overflow-visible transition-transform">
+            <div className="absolute right-0 top-0 bottom-0 w-[85%] max-w-sm bg-white p-6 shadow-2xl lg:p-0 lg:bg-transparent lg:shadow-none lg:w-64 lg:static h-full overflow-y-auto lg:overflow-visible transition-transform">
               <div className="flex items-center justify-between mb-8 lg:hidden">
                 <h2 className="text-xl font-display font-bold text-[#0b224e]">Filtri</h2>
                 <button onClick={() => setShowMobileFilters(false)} className="p-2 text-slate-400">
                   <FaTimes size={20} />
                 </button>
               </div>
-              <CatalogSidebar
-                categories={categories.map(c => ({ ...c, href: c.id === 'ALL' ? '/marketplace' : `/marketplace?cat=${c.id}` }))}
-                activeCategory={activeCategory}
-                onCategoryChange={(id) => { handleCategoryChange(id); setShowMobileFilters(false); }}
-                minPrice={minPrice}
-                maxPrice={maxPrice}
-                onPriceChange={(min, max) => { setMinPrice(min); setMaxPrice(max); }}
-                sort={sort}
-                onSortChange={(s) => { setSort(s); setShowMobileFilters(false); }}
-                onResetFilters={() => { handleResetFilters(); setShowMobileFilters(false); }}
-              />
+              {/* Desktop sidebar with white background */}
+              <div className="lg:bg-white lg:rounded-2xl lg:p-5 lg:shadow-sm lg:border lg:border-slate-100">
+                <CatalogSidebar
+                  categories={categories.map(c => ({ ...c, href: c.id === 'ALL' ? '/marketplace' : `/marketplace?cat=${c.id}` }))}
+                  activeCategory={activeCategory}
+                  onCategoryChange={(id) => { handleCategoryChange(id); setShowMobileFilters(false); }}
+                  minPrice={minPrice}
+                  maxPrice={maxPrice}
+                  onPriceChange={(min, max) => { setMinPrice(min); setMaxPrice(max); }}
+                  sort={sort}
+                  onSortChange={(s) => { setSort(s); setShowMobileFilters(false); }}
+                  onResetFilters={() => { handleResetFilters(); setShowMobileFilters(false); }}
+                />
+              </div>
             </div>
           </div>
 
+          {/* Products Grid */}
           <div className="flex-1">
-            <div className="flex justify-between items-center mb-8">
-              <div>
-                <h1 className="text-3xl font-display font-bold text-[#0b224e]">
-                  {activeCategory === "ALL" ? "Catalogo Completo" : categories.find(c => c.id === activeCategory)?.label}
-                </h1>
-                {catalogItems.length > 0 && (
-                  <p className="text-slate-400 text-xs mt-1 uppercase font-bold tracking-widest">
-                    {catalogItems.length} prodotti trovati
-                  </p>
+            {/* Header */}
+            <div className="bg-white rounded-xl p-4 mb-4 shadow-sm border border-slate-100">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <div>
+                  <h1 className="text-xl md:text-2xl font-display font-bold text-[#0b224e]">
+                    {activeCategory === "ALL" ? "Catalogo Completo" : categories.find(c => c.id === activeCategory)?.label}
+                  </h1>
+                  {catalogItems.length > 0 && (
+                    <p className="text-slate-400 text-[10px] mt-0.5 uppercase font-bold tracking-widest">
+                      {catalogItems.length} prodotti
+                    </p>
+                  )}
+                </div>
+                {activeCategory === "ALL" && !query && (
+                  <button
+                    onClick={() => setShowFullCatalog(false)}
+                    className="text-slate-400 hover:text-[#0b224e] font-bold text-[10px] uppercase tracking-widest transition"
+                  >
+                    ← Vetrina
+                  </button>
                 )}
               </div>
-              {activeCategory === "ALL" && !query && (
-                <button
-                  onClick={() => setShowFullCatalog(false)}
-                  className="text-slate-400 hover:text-[#0b224e] font-bold text-xs uppercase tracking-widest transition"
-                >
-                  Torna alla Vetrina
-                </button>
-              )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
-              {catalogLoading ? (
-                Array.from({ length: 9 }).map((_, i) => (
-                  <div key={i} className="glass-panel h-80 animate-pulse" />
-                ))
-              ) : (
-                catalogItems.map((product) => (
-                  <div key={product.id} className="glass-card overflow-hidden group glass-hover">
-                    <Link href={`/product/${product.id}`} className="block">
-                      <div className="relative w-full h-56 bg-slate-100">
-                        <Image
-                          src={product.image}
-                          alt=""
-                          fill
-                          className="object-cover"
-                          loading="lazy"
-                          sizes="(max-width: 640px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        />
-                      </div>
-                      <div className="p-6">
-                        <h3 className="font-bold text-lg mb-2 group-hover:text-[#a41f2e] transition">
-                          {product.title}
-                        </h3>
-                        <p className="text-sm text-slate-500 mb-4 line-clamp-2">{product.description}</p>
-                        <div className="flex justify-between items-center">
-                          <div className="font-bold text-xl text-[#0b224e]">€{((product.priceCents || 0) / 100).toFixed(2)}</div>
-                          <div className="flex flex-col items-end gap-1">
-                            {product.premiumOnly && <span className="text-[10px] font-bold text-[#a41f2e] uppercase">Solo Premium</span>}
-                            {product.pointsEligible && product.pointsPrice && (
-                              <span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded font-bold text-slate-600">🪙 {product.pointsPrice} punti</span>
-                            )}
+            {/* Products */}
+            <div className="bg-white rounded-2xl p-3 md:p-4 shadow-sm border border-slate-100">
+              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
+                {catalogLoading ? (
+                  Array.from({ length: 12 }).map((_, i) => (
+                    <div key={i} className="bg-slate-50 rounded-xl h-64 animate-pulse" />
+                  ))
+                ) : (
+                  catalogItems.map((product) => (
+                    <div key={product.id} className="bg-slate-50 rounded-xl overflow-hidden group hover:shadow-md transition-shadow">
+                      <Link href={`/product/${product.id}`} className="block">
+                        <div className="relative w-full h-32 sm:h-36 bg-slate-100">
+                          <Image
+                            src={product.image}
+                            alt=""
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-300"
+                            loading="lazy"
+                            sizes="(max-width: 640px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                          />
+                        </div>
+                        <div className="p-2.5">
+                          <h3 className="font-bold text-xs mb-0.5 group-hover:text-[#a41f2e] transition line-clamp-1">
+                            {product.title}
+                          </h3>
+                          <p className="text-[10px] text-slate-500 mb-2 line-clamp-1">{product.description}</p>
+                          <div className="flex justify-between items-center">
+                            <div className="font-bold text-sm text-[#0b224e]">€{((product.priceCents || 0) / 100).toFixed(2)}</div>
+                            {product.premiumOnly && <span className="text-[8px] font-bold text-[#a41f2e] uppercase">Premium</span>}
                           </div>
                         </div>
+                      </Link>
+                      <div className="px-2.5 pb-2.5">
+                        <button
+                          onClick={() => handleAddToCart(product)}
+                          className="w-full py-1.5 bg-[#0b224e] text-white text-[10px] font-bold rounded-full hover:shadow-md transition"
+                        >
+                          {user?.isMember ? "Aggiungi" : "Registrati"}
+                        </button>
                       </div>
-                    </Link>
-                    <div className="px-6 pb-6">
-                      <button
-                        onClick={() => handleAddToCart(product)}
-                        className="w-full py-2.5 bg-[#0b224e] text-white text-xs font-bold rounded-full hover:shadow-lg transition"
-                      >
-                        {user?.isMember ? "Aggiungi al carrello" : "Registrati per acquistare"}
-                      </button>
                     </div>
-                  </div>
-                ))
+                  ))
+                )}
+              </div>
+
+              {!catalogLoading && catalogItems.length === 0 && (
+                <div className="bg-slate-50 border border-dashed border-slate-200 rounded-2xl p-16 text-center">
+                  <p className="text-slate-400 font-medium whitespace-pre-wrap">
+                    Nessun prodotto corrisponde ai criteri selezionati.{"\n"}Prova a cambiare i filtri o la categoria.
+                  </p>
+                </div>
               )}
             </div>
-
-            {!catalogLoading && catalogItems.length === 0 && (
-              <div className="bg-white/50 border border-dashed border-slate-200 rounded-[2rem] p-20 text-center">
-                <p className="text-slate-400 font-medium whitespace-pre-wrap">
-                  Nessun prodotto corrisponde ai criteri selezionati.{"\n"}Prova a cambiare i filtri o la categoria.
-                </p>
-              </div>
-            )}
           </div>
         </div>
       )}

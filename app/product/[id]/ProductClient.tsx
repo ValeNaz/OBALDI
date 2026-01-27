@@ -5,6 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useUser } from "../../../context/UserContext";
 import { useCart } from "@/context/CartContext";
+import ReviewList from "@/components/reviews/ReviewList";
+import WishlistButton from "@/components/wishlist/WishlistButton";
 
 type ProductMedia = {
   id: string;
@@ -23,6 +25,9 @@ type ApiProduct = {
   pointsEligible: boolean;
   pointsPrice: number | null;
   media: ProductMedia[];
+  stockQty: number;
+  trackInventory: boolean;
+  isOutOfStock: boolean;
 };
 
 type ProductClientProps = {
@@ -132,6 +137,13 @@ const ProductClient = ({ product }: ProductClientProps) => {
       window.location.href = "/membership";
       return;
     }
+
+    // Check stock
+    if (product.trackInventory && product.isOutOfStock) {
+      setActionError("Prodotto esaurito.");
+      return;
+    }
+
     setActionMessage("Prodotto aggiunto al carrello.");
   };
 
@@ -196,7 +208,10 @@ const ProductClient = ({ product }: ProductClientProps) => {
         </div>
 
         <div className="flex flex-col">
-          <h1 className="text-4xl md:text-5xl font-display font-bold text-[#0b224e] mb-4">{product.title}</h1>
+          <div className="flex items-start justify-between">
+            <h1 className="text-4xl md:text-5xl font-display font-bold text-[#0b224e] mb-4">{product.title}</h1>
+            <WishlistButton productId={product.id} className="mt-2" />
+          </div>
           <div className="flex items-center space-x-4 mb-8">
             <div className="text-3xl font-black text-[#0b224e]">€{(product.priceCents / 100).toFixed(2)}</div>
             <div className="text-sm text-slate-400 font-medium">Spedizione inclusa per i membri</div>
@@ -255,9 +270,10 @@ const ProductClient = ({ product }: ProductClientProps) => {
                 <>
                   <button
                     onClick={handleAddToCart}
-                    className="w-full py-3 border-2 border-slate-200 rounded-full font-bold text-[#0b224e] bg-white/70 hover:bg-white transition"
+                    disabled={product.isOutOfStock}
+                    className="w-full py-3 border-2 border-slate-200 rounded-full font-bold text-[#0b224e] bg-white/70 hover:bg-white transition disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Aggiungi al carrello
+                    {product.isOutOfStock ? "Esaurito" : "Aggiungi al carrello"}
                   </button>
                   <button
                     onClick={handleCheckout}
@@ -283,8 +299,8 @@ const ProductClient = ({ product }: ProductClientProps) => {
                         disabled={actionLoading || pointsToUse <= 0}
                         onClick={handlePointsPurchase}
                         className={`w-full py-4 border-2 rounded-lg font-bold transition flex items-center justify-center ${pointsToUse > 0
-                            ? "border-slate-800 text-[#0b224e] bg-white/70 hover:bg-white"
-                            : "border-slate-200 text-slate-300 cursor-not-allowed bg-white/40"
+                          ? "border-slate-800 text-[#0b224e] bg-white/70 hover:bg-white"
+                          : "border-slate-200 text-slate-300 cursor-not-allowed bg-white/40"
                           }`}
                       >
                         {actionLoading ? "Elaborazione..." : label}
@@ -316,6 +332,10 @@ const ProductClient = ({ product }: ProductClientProps) => {
             </div>
           )}
         </div>
+      </div>
+
+      <div className="mt-16 pt-16 border-t border-slate-200">
+        <ReviewList productId={product.id} />
       </div>
     </div>
   );

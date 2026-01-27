@@ -64,11 +64,14 @@
 
   body {
     @apply bg-background text-foreground font-body antialiased;
+    /* background-attachment: fixed causes repaints on scroll. Using a pseudo-element or simple background is better. 
+       For minimal impact, we remove 'fixed' and let it scroll naturally, or use a separate fixed div if strictly needed. 
+       Here we make it scroll with content for performance. */
     background-image:
-      radial-gradient(circle at 20% 20%, rgba(11, 34, 78, 0.08), transparent 55%),
-      radial-gradient(circle at 80% 10%, rgba(164, 31, 46, 0.08), transparent 50%),
+      radial-gradient(circle at 20% 20%, rgba(11, 34, 78, 0.04), transparent 55%),
+      radial-gradient(circle at 80% 10%, rgba(164, 31, 46, 0.04), transparent 50%),
       linear-gradient(180deg, #f8fafc 0%, #eef2f7 45%, #f8fafc 100%);
-    background-attachment: fixed;
+    /* background-attachment: fixed; -- REMOVED for performance */
   }
 }
 

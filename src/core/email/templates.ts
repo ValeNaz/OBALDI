@@ -141,3 +141,73 @@ export const renderMembershipRenewal = (params: {
     text
   };
 };
+
+export const renderOrderShipped = (params: {
+  orderId: string;
+  carrier: string | null;
+  trackingCode: string | null;
+  trackingUrl: string | null;
+  shippedAt: Date;
+}) => {
+  const orderUrl = `${getAppBaseUrl()}/orders/${params.orderId}`;
+
+  const trackingHtml = params.trackingCode
+    ? `<p>Corriere: ${escapeHtml(params.carrier || "Non specificato")}</p>
+       <p>Tracking Code: <strong>${escapeHtml(params.trackingCode)}</strong></p>
+       ${params.trackingUrl ? `<p><a href="${params.trackingUrl}">Segui la spedizione</a></p>` : ""}`
+    : `<p>La spedizione è partita.</p>`;
+
+  const html = `
+    <p>Ciao,</p>
+    <p>Il tuo ordine è stato spedito!</p>
+    <p>Ordine: ${escapeHtml(params.orderId)}</p>
+    ${trackingHtml}
+    <p>Puoi seguire i dettagli qui: <a href="${orderUrl}">${orderUrl}</a></p>
+  `;
+
+  const text = [
+    "Il tuo ordine è stato spedito!",
+    `Ordine: ${params.orderId}`,
+    params.carrier ? `Corriere: ${params.carrier}` : "",
+    params.trackingCode ? `Tracking Code: ${params.trackingCode}` : "",
+    params.trackingUrl ? `Link Tracking: ${params.trackingUrl}` : "",
+    `Dettagli: ${orderUrl}`
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  return {
+    subject: `Il tuo ordine ${params.orderId.slice(0, 8)} è stato spedito!`,
+    html,
+    text
+  };
+};
+
+export const renderOrderDelivered = (params: {
+  orderId: string;
+  deliveredAt: Date;
+}) => {
+  const orderUrl = `${getAppBaseUrl()}/orders/${params.orderId}`;
+  const reviewUrl = `${getAppBaseUrl()}/product/REVIEW-LINK-PLACEHOLDER`; // Ideally link to products to review
+
+  const html = `
+    <p>Ciao,</p>
+    <p>Il tuo ordine è stato consegnato.</p>
+    <p>Ordine: ${escapeHtml(params.orderId)}</p>
+    <p>Speriamo che i prodotti siano di tuo gradimento.</p>
+    <p><a href="${orderUrl}">Lascia una recensione</a></p>
+  `;
+
+  const text = [
+    "Il tuo ordine è stato consegnato.",
+    `Ordine: ${params.orderId}`,
+    "Speriamo che i prodotti siano di tuo gradimento.",
+    `Lascia una recensione: ${orderUrl}`
+  ].join("\n");
+
+  return {
+    subject: `Il tuo ordine ${params.orderId.slice(0, 8)} è stato consegnato!`,
+    html,
+    text
+  };
+};
