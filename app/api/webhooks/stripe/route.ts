@@ -281,7 +281,7 @@ export async function POST(request: Request) {
           provider: "STRIPE",
           eventId: parsed.data.id,
           type: parsed.data.type,
-          payload: event as unknown as Record<string, unknown>
+          payload: event as any
         }
       });
     }

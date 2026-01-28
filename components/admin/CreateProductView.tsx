@@ -6,7 +6,7 @@ import ProductForm from "@/components/dashboard/ProductForm";
 export default function CreateProductView({ userRole, userId, redirectBase = "/admin/products" }: { userRole: "ADMIN" | "SELLER", userId: string, redirectBase?: string }) {
     const router = useRouter();
 
-    const handleCreate = async (data: any) => {
+    const handleCreate = async (data: any, files?: File[]) => {
         try {
             const apiEndpoint = userRole === "SELLER" ? "/api/seller/products" : "/api/admin/products";
             const payloadData = {
@@ -29,6 +29,23 @@ export default function CreateProductView({ userRole, userId, redirectBase = "/a
 
             const payload = await res.json();
             const newProduct = payload.product;
+
+            // Upload initial images if any
+            if (files && files.length > 0) {
+                // Show some feedback ideally, but we are about to redirect
+                // We'll just await them
+                for (const file of files) {
+                    const formData = new FormData();
+                    formData.append("file", file);
+                    formData.append("productId", newProduct.id);
+                    formData.append("mediaType", file.type.startsWith("video/") ? "VIDEO" : "IMAGE");
+
+                    await fetch("/api/upload", {
+                        method: "POST",
+                        body: formData
+                    });
+                }
+            }
 
             // Redirect to the full editor
             router.push(`${redirectBase}/${newProduct.id}`);

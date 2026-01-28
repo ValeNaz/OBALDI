@@ -62,7 +62,7 @@ export async function POST(
     data: {
       productId: product.id,
       sellerId: session.user.id,
-      proposedDataJson: parsed.data.proposedDataJson,
+      proposedDataJson: parsed.data.proposedDataJson as any,
       status: "PENDING"
     }
   });

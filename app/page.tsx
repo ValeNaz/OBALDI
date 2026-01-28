@@ -10,9 +10,9 @@ export default function Home() {
   return (
     <div className="relative overflow-hidden bg-gradient-to-b from-slate-50 via-white to-slate-50">
       {/* Background Elements - più sottili e moderni */}
-      <div className="pointer-events-none absolute -top-40 right-[-15%] h-[600px] w-[600px] rounded-full bg-gradient-to-br from-[#0b224e]/8 to-[#0b224e]/3 blur-3xl opacity-60" />
-      <div className="pointer-events-none absolute top-[40%] left-[-15%] h-[500px] w-[500px] rounded-full bg-gradient-to-tr from-[#a41f2e]/8 to-[#a41f2e]/3 blur-3xl opacity-60" />
-      <div className="pointer-events-none absolute bottom-[-20%] right-[15%] h-[450px] w-[450px] rounded-full bg-gradient-to-tl from-[#0b224e]/6 to-transparent blur-3xl opacity-60" />
+      <div className="hidden md:block pointer-events-none absolute -top-40 right-[-15%] h-[600px] w-[600px] rounded-full bg-gradient-to-br from-[#0b224e]/8 to-[#0b224e]/3 blur-3xl opacity-60" />
+      <div className="hidden md:block pointer-events-none absolute top-[40%] left-[-15%] h-[500px] w-[500px] rounded-full bg-gradient-to-tr from-[#a41f2e]/8 to-[#a41f2e]/3 blur-3xl opacity-60" />
+      <div className="hidden md:block pointer-events-none absolute bottom-[-20%] right-[15%] h-[450px] w-[450px] rounded-full bg-gradient-to-tl from-[#0b224e]/6 to-transparent blur-3xl opacity-60" />
 
       <main className="container-max page-pad">
         {/* HERO SECTION - Animated */}

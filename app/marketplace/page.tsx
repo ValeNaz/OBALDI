@@ -391,35 +391,46 @@ const Marketplace = () => {
                   ))
                 ) : (
                   catalogItems.map((product) => (
-                    <div key={product.id} className="bg-slate-50 rounded-xl overflow-hidden group hover:shadow-md transition-shadow">
-                      <Link href={`/product/${product.id}`} className="block">
-                        <div className="relative w-full h-32 sm:h-36 bg-slate-100">
+                    <div key={product.id} className="bg-white rounded-2xl overflow-hidden group hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-500 border border-slate-100 flex flex-col h-full">
+                      <Link href={`/product/${product.id}`} className="block relative overflow-hidden">
+                        <div className="relative w-full h-40 sm:h-48 bg-slate-50">
                           <Image
                             src={product.image}
                             alt=""
                             fill
-                            className="object-cover group-hover:scale-105 transition-transform duration-300"
+                            className="object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
                             loading="lazy"
                             sizes="(max-width: 640px) 50vw, (max-width: 1200px) 33vw, 25vw"
                           />
+                          {product.premiumOnly && (
+                            <div className="absolute top-3 left-3 bg-[#a41f2e] text-white text-[8px] font-bold px-2 py-1 rounded-full uppercase tracking-widest shadow-lg">
+                              Premium
+                            </div>
+                          )}
                         </div>
-                        <div className="p-2.5">
-                          <h3 className="font-bold text-xs mb-0.5 group-hover:text-[#a41f2e] transition line-clamp-1">
+                        <div className="p-4 flex-grow">
+                          <h3 className="font-bold text-sm text-[#0b224e] mb-1 group-hover:text-[#a41f2e] transition-colors line-clamp-1">
                             {product.title}
                           </h3>
-                          <p className="text-[10px] text-slate-500 mb-2 line-clamp-1">{product.description}</p>
-                          <div className="flex justify-between items-center">
-                            <div className="font-bold text-sm text-[#0b224e]">€{((product.priceCents || 0) / 100).toFixed(2)}</div>
-                            {product.premiumOnly && <span className="text-[8px] font-bold text-[#a41f2e] uppercase">Premium</span>}
+                          <p className="text-[11px] text-slate-400 mb-3 line-clamp-2 min-h-[32px] leading-relaxed">
+                            {product.description}
+                          </p>
+                          <div className="flex justify-between items-center mt-auto">
+                            <div className="font-black text-base text-[#0b224e]">
+                              €{((product.priceCents || 0) / 100).toFixed(2)}
+                            </div>
+                            <div className="flex items-center gap-1 text-[10px] font-bold text-amber-500">
+                              ★ <span className="text-slate-400">4.5</span>
+                            </div>
                           </div>
                         </div>
                       </Link>
-                      <div className="px-2.5 pb-2.5">
+                      <div className="px-4 pb-4 mt-auto">
                         <button
                           onClick={() => handleAddToCart(product)}
-                          className="w-full py-1.5 bg-[#0b224e] text-white text-[10px] font-bold rounded-full hover:shadow-md transition"
+                          className="w-full py-2 bg-slate-50 text-[#0b224e] text-xs font-bold rounded-full group-hover:bg-[#0b224e] group-hover:text-white transition-all duration-300 border border-slate-100 group-hover:border-[#0b224e]"
                         >
-                          {user?.isMember ? "Aggiungi" : "Registrati"}
+                          {user?.isMember ? "Aggiungi al carrello" : "Registrati ora"}
                         </button>
                       </div>
                     </div>

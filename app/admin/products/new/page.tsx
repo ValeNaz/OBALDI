@@ -9,5 +9,5 @@ export default async function NewProductPage() {
     const session = await requireSession();
     requireRole(session.user.role, ["ADMIN"]);
 
-    return <CreateProductView userRole={session.user.role} userId={session.user.id} />;
+    return <CreateProductView userRole={session.user.role as "ADMIN" | "SELLER"} userId={session.user.id} />;
 }

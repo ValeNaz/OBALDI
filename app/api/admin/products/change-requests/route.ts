@@ -30,7 +30,7 @@ export async function GET(request: Request) {
   }
 
   const requests = await prisma.productChangeRequest.findMany({
-    where: status ? { status } : undefined,
+    where: status ? { status: status as "PENDING" | "APPROVED" | "REJECTED" } : undefined,
     include: {
       product: { select: { id: true, title: true } },
       seller: { select: { id: true, email: true } }

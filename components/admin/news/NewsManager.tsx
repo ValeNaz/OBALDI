@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FaNewspaper, FaPen, FaTrash, FaPlus, FaCheck, FaTimes } from "react-icons/fa";
+import { FaNewspaper, FaPen, FaTrash, FaPlus, FaCheck, FaTimes, FaSearch, FaEye } from "react-icons/fa";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { EmptyState } from "@/components/ui/EmptyState";
+import DOMPurify from "dompurify";
 
 type NewsPost = {
     id: string;
@@ -15,7 +18,10 @@ type NewsPost = {
     updatedAt: string;
 };
 
+import { useUI } from "@/context/UIContext";
+
 export default function NewsManager() {
+    const { showToast, confirm } = useUI();
     const [newsPosts, setNewsPosts] = useState<NewsPost[]>([]);
     const [newsStatus, setNewsStatus] = useState<"ALL" | "DRAFT" | "PUBLISHED">("ALL");
     const [newsLoading, setNewsLoading] = useState(false);
@@ -86,7 +92,7 @@ export default function NewsManager() {
                     title: newsTitle.trim(),
                     slug: newsSlug.trim() || slugify(newsTitle),
                     excerpt: newsExcerpt.trim() || undefined,
-                    body: newsBody.trim(),
+                    body: DOMPurify.sanitize(newsBody.trim()),
                     tags,
                     status: newsStatusForm
                 })
@@ -99,6 +105,7 @@ export default function NewsManager() {
             }
 
             setNewsPosts((prev) => [payload.post, ...prev]);
+            showToast("News creata con successo", "success");
 
             // Reset form
             setNewsTitle("");
@@ -116,16 +123,23 @@ export default function NewsManager() {
     };
 
     const handleNewsDelete = async (post: NewsPost) => {
-        const confirmed = window.confirm("Vuoi eliminare questa news?");
+        const confirmed = await confirm({
+            title: "Elimina News",
+            message: `Sei sicuro di voler eliminare la news "${post.title}"?`,
+            confirmText: "Elimina",
+            variant: "danger"
+        });
         if (!confirmed) return;
+
         const response = await fetch(`/api/admin/news/${post.id}`, {
             method: "DELETE"
         });
         if (!response.ok) {
-            setNewsError("Impossibile eliminare la news.");
+            showToast("Impossibile eliminare la news.", "error");
             return;
         }
         setNewsPosts((prev) => prev.filter((item) => item.id !== post.id));
+        showToast("News eliminata", "success");
     };
 
     const handleToggleStatus = async (post: NewsPost) => {
@@ -139,6 +153,7 @@ export default function NewsManager() {
         if (response.ok) {
             const payload = await response.json();
             setNewsPosts(prev => prev.map(p => p.id === post.id ? payload.post : p));
+            showToast(`News ${newStatus === "PUBLISHED" ? "pubblicata" : "spostata in bozze"}`, "success");
         }
     };
 
@@ -230,9 +245,36 @@ export default function NewsManager() {
             )}
 
             {newsLoading && !newsError ? (
-                <div className="p-12 text-center text-slate-400">
-                    <div className="inline-block w-8 h-8 border-4 border-slate-200 border-t-[#0b224e] rounded-full animate-spin mb-4" />
-                    <p>Caricamento news...</p>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                        <thead className="bg-slate-50/50 text-slate-500 text-xs uppercase tracking-widest font-bold border-b border-slate-100">
+                            <tr>
+                                <th className="px-6 py-4 hidden sm:table-cell">Data</th>
+                                <th className="px-6 py-4">Articolo</th>
+                                <th className="px-6 py-4 hidden md:table-cell">Stato & Tags</th>
+                                <th className="px-6 py-4 text-right">Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {Array.from({ length: 5 }).map((_, i) => (
+                                <tr key={i} className="border-b border-slate-50">
+                                    <td className="px-6 py-4">
+                                        <Skeleton className="h-3 w-16" />
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <Skeleton className="h-4 w-40 mb-2" />
+                                        <Skeleton className="h-3 w-24" />
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <Skeleton className="h-4 w-20 rounded-full" />
+                                    </td>
+                                    <td className="px-6 py-4 text-right">
+                                        <Skeleton className="h-8 w-16 rounded-full ml-auto" />
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
             ) : (
                 <div className="overflow-x-auto">
@@ -242,52 +284,71 @@ export default function NewsManager() {
                                 <th className="px-6 py-4">Data</th>
                                 <th className="px-6 py-4">Titolo / Slug</th>
                                 <th className="px-6 py-4">Tags</th>
-                                <th className="px-6 py-4">Stato</th>
                                 <th className="px-6 py-4 text-right">Azioni</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
-                            {newsPosts.map(post => (
-                                <tr key={post.id} className="hover:bg-slate-50">
-                                    <td className="px-6 py-4 text-xs text-slate-500">
-                                        {new Date(post.updatedAt).toLocaleDateString()}
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="font-bold text-[#0b224e]">{post.title}</div>
-                                        <div className="text-xs text-slate-400 font-mono">{post.slug}</div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex flex-wrap gap-1">
-                                            {post.tags.map(tag => (
-                                                <span key={tag} className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">
-                                                    #{tag}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className={`inline-flex px-2 py-1 rounded text-xs font-bold ${post.status === 'PUBLISHED' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'
-                                            }`}>
-                                            {post.status === 'PUBLISHED' ? 'PUBBLICATO' : 'BOZZA'}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 text-right space-x-2">
-                                        <button
-                                            onClick={() => handleToggleStatus(post)}
-                                            className="p-2 text-slate-400 hover:text-[#0b224e] hover:bg-slate-100 rounded-full transition"
-                                            title={post.status === 'PUBLISHED' ? "Sposta in bozze" : "Pubblica"}
-                                        >
-                                            {post.status === 'PUBLISHED' ? <FaTimes /> : <FaCheck />}
-                                        </button>
-                                        <button
-                                            onClick={() => handleNewsDelete(post)}
-                                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full transition"
-                                        >
-                                            <FaTrash />
-                                        </button>
+                            {newsPosts.length === 0 ? (
+                                <tr>
+                                    <td colSpan={4} className="px-6 py-12">
+                                        <EmptyState
+                                            icon={<FaNewspaper size={24} />}
+                                            title="Nessuna news"
+                                            description="Non abbiamo trovato articoli che corrispondano ai criteri."
+                                            action={
+                                                <button onClick={() => setShowForm(true)} className="btn btn-primary text-xs">Crea primo articolo</button>
+                                            }
+                                        />
                                     </td>
                                 </tr>
-                            ))}
+                            ) : (
+                                newsPosts.map(post => (
+                                    <tr key={post.id} className="hover:bg-slate-50">
+                                        <td className="px-6 py-4 hidden sm:table-cell text-xs text-slate-500">
+                                            {new Date(post.updatedAt).toLocaleDateString()}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="font-bold text-[#0b224e] text-xs md:text-sm line-clamp-1">{post.title}</div>
+                                            <div className="flex flex-wrap items-center gap-2 mt-1">
+                                                <span className="text-[10px] text-slate-400 font-mono hidden md:inline">{post.slug}</span>
+                                                <span className="text-[9px] text-slate-400 sm:hidden">
+                                                    {new Date(post.updatedAt).toLocaleDateString()}
+                                                </span>
+                                                <span className={`md:hidden inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold ${post.status === 'PUBLISHED' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
+                                                    {post.status === 'PUBLISHED' ? 'PUBBLICATO' : 'BOZZA'}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 hidden md:table-cell">
+                                            <div className="flex flex-col gap-2">
+                                                <span className={`inline-flex items-center w-fit px-2 py-0.5 rounded text-[10px] font-bold ${post.status === 'PUBLISHED' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
+                                                    {post.status === 'PUBLISHED' ? 'PUBBLICATO' : 'BOZZA'}
+                                                </span>
+                                                <div className="flex flex-wrap gap-1">
+                                                    {post.tags.map(tag => (
+                                                        <span key={tag} className="text-[10px] text-slate-400">#{tag}</span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 text-right space-x-2">
+                                            <button
+                                                onClick={() => handleToggleStatus(post)}
+                                                className="p-2 text-slate-400 hover:text-[#0b224e] hover:bg-slate-100 rounded-full transition"
+                                                title={post.status === 'PUBLISHED' ? "Sposta in bozze" : "Pubblica"}
+                                            >
+                                                {post.status === 'PUBLISHED' ? <FaTimes /> : <FaCheck />}
+                                            </button>
+                                            <button
+                                                onClick={() => handleNewsDelete(post)}
+                                                className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full transition"
+                                            >
+                                                <FaTrash />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>

@@ -16,7 +16,10 @@ type OptionManagerProps = {
     onSave: (options: Option[]) => Promise<void>;
 };
 
+import { useUI } from "@/context/UIContext";
+
 export default function OptionManager({ productId, initialOptions, onSave }: OptionManagerProps) {
+    const { showToast } = useUI();
     const [options, setOptions] = useState<Option[]>(
         initialOptions.sort((a, b) => a.position - b.position)
     );
@@ -57,16 +60,16 @@ export default function OptionManager({ productId, initialOptions, onSave }: Opt
     const handleSave = async () => {
         // Validate
         if (options.some(o => !o.name.trim() || o.values.length === 0)) {
-            alert("Ogni opzione deve avere un nome e almeno un valore.");
+            showToast("Ogni opzione deve avere un nome e almeno un valore.", "error");
             return;
         }
 
         setSaving(true);
         try {
             await onSave(options);
-            alert("Opzioni salvate correttamente!");
+            showToast("Opzioni salvate correttamente!", "success");
         } catch (err) {
-            alert("Errore durante il salvataggio.");
+            showToast("Errore durante il salvataggio.", "error");
         } finally {
             setSaving(false);
         }
@@ -78,7 +81,7 @@ export default function OptionManager({ productId, initialOptions, onSave }: Opt
                 <h3 className="font-bold text-lg text-[#0b224e]">Opzioni Prodotto</h3>
                 <button
                     onClick={addOption}
-                    className="flex items-center gap-2 text-sm font-bold text-blue-600 hover:text-blue-800 transition"
+                    className="flex items-center gap-2 text-sm font-bold text-[#0b224e] hover:text-blue-900 transition"
                 >
                     <FaPlus /> Aggiungi Opzione
                 </button>
@@ -99,7 +102,7 @@ export default function OptionManager({ productId, initialOptions, onSave }: Opt
                             <FaTrash size={12} />
                         </button>
 
-                        <div className="grid md:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <div className="md:col-span-1">
                                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nome Opzione</label>
                                 <input
@@ -126,7 +129,7 @@ export default function OptionManager({ productId, initialOptions, onSave }: Opt
                                     ))}
                                     <input
                                         type="text"
-                                        className="bg-transparent border-none focus:ring-0 text-xs font-medium w-32"
+                                        className="bg-transparent border-none focus:ring-0 text-xs font-medium w-full sm:w-32"
                                         placeholder="Aggiungi valore..."
                                         onKeyDown={(e) => {
                                             if (e.key === "Enter") {
@@ -158,7 +161,7 @@ export default function OptionManager({ productId, initialOptions, onSave }: Opt
                 <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="bg-[#0b224e] text-white px-8 py-2 rounded-full font-bold shadow-lg hover:shadow-xl transition disabled:opacity-50"
+                    className="w-full sm:w-auto bg-[#0b224e] text-white px-8 py-2.5 rounded-full font-bold shadow-lg hover:shadow-xl transition disabled:opacity-50"
                 >
                     {saving ? "Salvataggio..." : "Salva Opzioni"}
                 </button>

@@ -17,7 +17,10 @@ type ImageManagerProps = {
     onMediaChange?: (media: UploadedMedia[]) => void;
 };
 
+import { useUI } from "@/context/UIContext";
+
 const ImageManager = ({ productId, initialMedia = [], role, onMediaChange }: ImageManagerProps) => {
+    const { showToast, confirm } = useUI();
     const [mediaItems, setMediaItems] = useState<UploadedMedia[]>(initialMedia);
     const [uploadError, setUploadError] = useState<string | null>(null);
     const [uploading, setUploading] = useState(false);
@@ -68,12 +71,19 @@ const ImageManager = ({ productId, initialMedia = [], role, onMediaChange }: Ima
                 onMediaChange?.(updated);
                 return updated;
             });
+            showToast(`${newItems.length} file caricati con successo`, "success");
         }
         setUploading(false);
     };
 
     const handleRemove = async (mediaId: string) => {
-        if (!confirm("Vuoi eliminare definitivamente questa immagine?")) return;
+        const confirmed = await confirm({
+            title: "Rimuovi Media",
+            message: "Vuoi eliminare definitivamente questo file? Questa azione non può essere annullata.",
+            confirmText: "Rimuovi",
+            variant: "danger"
+        });
+        if (!confirmed) return;
 
         try {
             // For now, only ADMIN has a dedicated DELETE endpoint
@@ -84,7 +94,7 @@ const ImageManager = ({ productId, initialMedia = [], role, onMediaChange }: Ima
 
                 if (!response.ok) {
                     const payload = await response.json().catch(() => null);
-                    alert(payload?.error?.message ?? "Errore durante l'eliminazione dal server.");
+                    showToast(payload?.error?.message ?? "Errore durante l'eliminazione dal server.", "error");
                     return;
                 }
             }
@@ -95,9 +105,10 @@ const ImageManager = ({ productId, initialMedia = [], role, onMediaChange }: Ima
                 onMediaChange?.(updated);
                 return updated;
             });
+            showToast("File rimosso", "success");
         } catch (err) {
             console.error(err);
-            alert("Errore di connessione durante l'eliminazione.");
+            showToast("Errore durante l'eliminazione.", "error");
         }
     };
 

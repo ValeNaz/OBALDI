@@ -26,7 +26,7 @@ type ProductData = {
 
 type ProductFormProps = {
     initialData?: ProductData;
-    onSubmit: (data: ProductData) => Promise<ProductData | void>; // Allow returning created product
+    onSubmit: (data: ProductData, files?: File[]) => Promise<ProductData | void>; // Allow returning created product
     onCancel: () => void;
     isSubmitting?: boolean;
     error?: string | null;
@@ -59,6 +59,7 @@ const ProductForm = ({ initialData, onSubmit, onCancel, isSubmitting = false, er
     // Let's stick to: Create basic info -> Returns ID -> Enable image upload.
     // Wait, if we use a single form for both, we handle "Create" mode without images, then switch to "Edit" mode with images.
 
+    const [pendingFiles, setPendingFiles] = useState<File[]>([]);
     const [localSaving, setLocalSaving] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -66,7 +67,7 @@ const ProductForm = ({ initialData, onSubmit, onCancel, isSubmitting = false, er
         setLocalSaving(true);
         const cents = Math.round(parseFloat(priceInput || "0") * 100);
         try {
-            const result = await onSubmit({ ...form, priceCents: cents });
+            const result = await onSubmit({ ...form, priceCents: cents }, pendingFiles);
             if (result && result.id) {
                 setForm(prev => ({ ...prev, ...result }));
             }
@@ -88,7 +89,7 @@ const ProductForm = ({ initialData, onSubmit, onCancel, isSubmitting = false, er
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                         <label className="block text-sm font-bold text-slate-700 mb-2">Titolo</label>
                         <input
@@ -132,7 +133,7 @@ const ProductForm = ({ initialData, onSubmit, onCancel, isSubmitting = false, er
 
                 {role === "ADMIN" && (
                     <div className="p-4 bg-yellow-50/50 rounded-xl border border-yellow-100 space-y-4">
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             <label className="flex items-center gap-3 text-sm font-bold text-slate-700 cursor-pointer">
                                 <input
                                     type="checkbox"
@@ -140,7 +141,7 @@ const ProductForm = ({ initialData, onSubmit, onCancel, isSubmitting = false, er
                                     onChange={e => setForm(prev => ({ ...prev, isFeatured: e.target.checked }))}
                                     className="w-4 h-4 text-[#0b224e] rounded focus:ring-0"
                                 />
-                                Featured (Da non perdere)
+                                Featured
                             </label>
                             <label className="flex items-center gap-3 text-sm font-bold text-slate-700 cursor-pointer">
                                 <input
@@ -249,25 +250,45 @@ const ProductForm = ({ initialData, onSubmit, onCancel, isSubmitting = false, er
 
                 {/* Image Manager Section */}
                 {form.id ? (
-                    <div className="mt-8">
-                        <ImageManager
-                            productId={form.id}
-                            initialMedia={form.images}
-                            role={role}
-                            onMediaChange={(media) => setForm(prev => ({ ...prev, images: media }))}
-                        />
-                    </div>
+                    !hideImages && (
+                        <div className="mt-8">
+                            <ImageManager
+                                productId={form.id}
+                                initialMedia={form.images}
+                                role={role}
+                                onMediaChange={(media) => setForm(prev => ({ ...prev, images: media }))}
+                            />
+                        </div>
+                    )
                 ) : (
-                    <div className="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-xl text-center text-sm text-blue-800">
-                        Salva il prodotto per gestire le immagini.
+                    <div className="mt-6 p-6 bg-slate-50 border border-dashed border-slate-300 rounded-xl">
+                        <h3 className="text-sm font-bold text-[#0b224e] mb-2">Immagini del Prodotto</h3>
+                        <p className="text-xs text-slate-500 mb-4">Carica subito le immagini principali. La prima sarà la copertina.</p>
+
+                        <input
+                            type="file"
+                            multiple
+                            accept="image/jpeg,image/png,image/webp"
+                            onChange={(e) => {
+                                const files = e.target.files ? Array.from(e.target.files) : [];
+                                setPendingFiles(files);
+                            }}
+                            className="block w-full text-sm text-slate-500
+                                file:mr-4 file:py-2 file:px-4
+                                file:rounded-full file:border-0
+                                file:text-sm file:font-semibold
+                                file:bg-slate-100 file:text-[#0b224e]
+                                hover:file:bg-slate-200
+                            "
+                        />
                     </div>
                 )}
 
-                <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
+                <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-slate-200">
                     <button
                         type="button"
                         onClick={onCancel}
-                        className="px-6 py-2 rounded-full text-sm font-bold text-slate-600 hover:bg-slate-100 transition"
+                        className="w-full sm:w-auto px-6 py-2.5 rounded-full text-sm font-bold text-slate-600 hover:bg-slate-100 transition order-2 sm:order-1"
                         disabled={isSubmitting}
                     >
                         {form.id ? "Chiudi" : "Annulla"}
@@ -275,7 +296,7 @@ const ProductForm = ({ initialData, onSubmit, onCancel, isSubmitting = false, er
                     <button
                         type="submit"
                         disabled={isSubmitting || localSaving}
-                        className="bg-[#0b224e] text-white px-8 py-2 rounded-full text-sm font-bold shadow-lg hover:shadow-xl transition disabled:opacity-50"
+                        className="w-full sm:w-auto bg-[#0b224e] text-white px-8 py-2.5 rounded-full text-sm font-bold shadow-lg hover:shadow-xl transition disabled:opacity-50 order-1 sm:order-2"
                     >
                         {isSubmitting || localSaving ? "Salvataggio..." : (form.id ? "Aggiorna Dati" : "Crea e procedi")}
                     </button>

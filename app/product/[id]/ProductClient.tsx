@@ -31,6 +31,7 @@ type ApiProduct = {
   isOutOfStock: boolean;
   variants?: ProductVariant[];
   options?: ProductOption[];
+  specsJson?: any;
 };
 
 type ProductClientProps = {
@@ -148,12 +149,17 @@ const ProductClient = ({ product }: ProductClientProps) => {
     }
   };
 
-  const fullSpecs = [
-    "Hardware Open Source basato su ARM",
-    "Consumo energetico ridotto < 5W",
-    "Sistema operativo ObaldiOS preinstallato",
-    "Supporto tecnico prioritario 24/7"
-  ];
+  const fullSpecs = (() => {
+    if (!product.specsJson) return [];
+    if (Array.isArray(product.specsJson)) {
+      return product.specsJson.map(String);
+    }
+    if (typeof product.specsJson === 'object') {
+      return Object.entries(product.specsJson)
+        .map(([key, val]) => `${key}: ${val}`);
+    }
+    return [];
+  })();
 
   const mainMedia = product.media[0];
   const mainUrl = mainMedia?.url ?? "https://picsum.photos/seed/obaldi/800/600";
@@ -196,7 +202,7 @@ const ProductClient = ({ product }: ProductClientProps) => {
   };
 
   return (
-    <div className="container-max page-pad pt-28 md:pt-32 pb-16">
+    <div className="container-max page-pad pt-28 md:pt-32 pb-32">
       <Link href="/marketplace" className="text-sm font-bold text-slate-400 hover:text-[#0b224e] mb-8 inline-block">
         ← Torna al Marketplace
       </Link>
@@ -353,6 +359,21 @@ const ProductClient = ({ product }: ProductClientProps) => {
 
       <div className="mt-16 pt-16 border-t border-slate-200">
         <ReviewList productId={product.id} />
+      </div>
+
+      {/* Sticky Mobile Buy Bar */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-100 p-4 z-50 flex items-center justify-between gap-4 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+        <div className="flex flex-col">
+          <span className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Prezzo</span>
+          <span className="text-xl font-black text-[#0b224e]">€{(currentPriceCents / 100).toFixed(2)}</span>
+        </div>
+        <button
+          onClick={handleCheckout}
+          disabled={actionLoading || !canBuy || !selectionComplete}
+          className="flex-1 py-3.5 bg-[#0b224e] text-white font-bold rounded-full text-sm shadow-lg shadow-blue-900/20 active:scale-95 transition disabled:opacity-50"
+        >
+          {actionLoading ? "..." : (canBuy ? "Acquista" : "Esaurito")}
+        </button>
       </div>
     </div>
   );

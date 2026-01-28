@@ -25,8 +25,8 @@ const ProductCard = ({ product, variant }: ProductCardProps) => {
     <Link
       href={productHref}
       className={cn(
-        "group glass-panel overflow-hidden border border-white/60 bg-white/70 transition",
-        "hover:-translate-y-1 hover:shadow-glow-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b224e]/30",
+        "group glass-panel overflow-hidden border border-white/60 dark:border-white/10 bg-white/70 dark:bg-slate-900/60 transition",
+        "hover:-translate-y-1 hover:shadow-glow-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b224e]/30 dark:focus-visible:ring-blue-400/30",
         variant === "compact" ? "w-[220px]" : "w-[280px]"
       )}
     >
@@ -74,7 +74,7 @@ const ProductCard = ({ product, variant }: ProductCardProps) => {
         )}
         <div className="flex items-end justify-between">
           <div className="flex flex-col">
-            <span className="text-sm font-bold text-[#0b224e]">{price ?? "—"}</span>
+            <span className="text-sm font-bold text-[#0b224e] dark:text-white">{price ?? "—"}</span>
             {product.pointsEligible && product.pointsPrice && (
               <span className="text-[10px] font-medium text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-full flex items-center gap-1">
                 <FaCoins className="text-amber-600" /> max {product.pointsPrice}

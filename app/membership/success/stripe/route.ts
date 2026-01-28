@@ -65,6 +65,13 @@ export async function GET(request: Request) {
       ? await getStripeClient().subscriptions.retrieve(subscriptionId)
       : stripeSession.subscription;
 
+  if (!subscription) {
+    return NextResponse.json(
+      { error: { code: "SUBSCRIPTION_NOT_FOUND", message: "Subscription detailed data missing." } },
+      { status: 400 }
+    );
+  }
+
   const email =
     stripeSession.customer_details?.email ??
     stripeSession.customer_email ??

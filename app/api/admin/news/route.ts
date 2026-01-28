@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/src/core/db";
 import { AuthError, requireRole, requireSession } from "@/src/core/auth/guard";
 import { enforceSameOrigin } from "@/src/core/security/csrf";
+import { getClientIp, rateLimit } from "@/src/core/security/rate-limit";
 
 const createSchema = z.object({
   title: z.string().min(3),
@@ -21,6 +22,20 @@ const slugify = (value: string) =>
     .replace(/(^-|-$)/g, "");
 
 export async function GET(request: Request) {
+  const ip = getClientIp(request);
+  const limiter = rateLimit({
+    key: `admin:news:list:${ip}`,
+    limit: 60,
+    windowMs: 60 * 1000
+  });
+
+  if (!limiter.allowed) {
+    const retryAfter = Math.ceil((limiter.resetAt - Date.now()) / 1000);
+    return NextResponse.json(
+      { error: { code: "RATE_LIMITED", message: "Too many requests." } },
+      { status: 429, headers: { "Retry-After": String(retryAfter) } }
+    );
+  }
   let session;
   try {
     session = await requireSession();
@@ -37,7 +52,7 @@ export async function GET(request: Request) {
 
   const url = new URL(request.url);
   const status = url.searchParams.get("status");
-  const where = status === "DRAFT" || status === "PUBLISHED" ? { status } : {};
+  const where = status === "DRAFT" || status === "PUBLISHED" ? { status: status as "DRAFT" | "PUBLISHED" } : {};
 
   const posts = await prisma.contentPost.findMany({
     where,
@@ -48,6 +63,21 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const ip = getClientIp(request);
+  const limiter = rateLimit({
+    key: `admin:news:create:${ip}`,
+    limit: 20,
+    windowMs: 60 * 1000
+  });
+
+  if (!limiter.allowed) {
+    const retryAfter = Math.ceil((limiter.resetAt - Date.now()) / 1000);
+    return NextResponse.json(
+      { error: { code: "RATE_LIMITED", message: "Too many requests." } },
+      { status: 429, headers: { "Retry-After": String(retryAfter) } }
+    );
+  }
+
   const csrf = enforceSameOrigin(request);
   if (csrf) return csrf;
 

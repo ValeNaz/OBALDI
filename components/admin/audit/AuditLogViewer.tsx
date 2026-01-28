@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FaHistory, FaSearch, FaCode } from "react-icons/fa";
+import { FaHistory, FaSearch, FaCode, FaPlus, FaEdit, FaTrash, FaCheck, FaTimes, FaUser, FaInfoCircle } from "react-icons/fa";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 type AuditLogEntry = {
     id: string;
@@ -54,6 +56,17 @@ export default function AuditLogViewer() {
         };
     }, [auditQuery]);
 
+    const getActionVisuals = (action: string) => {
+        const a = action.toUpperCase();
+        if (a.includes("CREATE")) return { icon: <FaPlus className="text-green-500" />, bg: "bg-green-50", text: "text-green-700" };
+        if (a.includes("UPDATE") || a.includes("EDIT")) return { icon: <FaEdit className="text-blue-500" />, bg: "bg-blue-50", text: "text-blue-700" };
+        if (a.includes("DELETE") || a.includes("REMOVE")) return { icon: <FaTrash className="text-red-500" />, bg: "bg-red-50", text: "text-red-700" };
+        if (a.includes("APPROVE") || a.includes("SUCCESS")) return { icon: <FaCheck className="text-emerald-500" />, bg: "bg-emerald-50", text: "text-emerald-700" };
+        if (a.includes("REJECT") || a.includes("CANCEL") || a.includes("FAIL")) return { icon: <FaTimes className="text-rose-500" />, bg: "bg-rose-50", text: "text-rose-700" };
+        if (a.includes("USER") || a.includes("MEMBER")) return { icon: <FaUser className="text-purple-500" />, bg: "bg-purple-50", text: "text-purple-700" };
+        return { icon: <FaInfoCircle className="text-slate-500" />, bg: "bg-slate-50", text: "text-slate-700" };
+    };
+
     return (
         <div className="glass-panel overflow-hidden">
             <div className="p-6 border-b border-white/70 flex md:flex-row flex-col gap-4 justify-between items-center">
@@ -79,9 +92,39 @@ export default function AuditLogViewer() {
             )}
 
             {auditLoading && !auditError ? (
-                <div className="p-12 text-center text-slate-400">
-                    <div className="inline-block w-8 h-8 border-4 border-slate-200 border-t-[#0b224e] rounded-full animate-spin mb-4" />
-                    <p>Caricamento logs...</p>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                        <thead className="bg-slate-50/50 text-slate-500 text-xs uppercase tracking-widest font-bold border-b border-slate-100">
+                            <tr>
+                                <th className="px-6 py-4">Data</th>
+                                <th className="px-6 py-4">User</th>
+                                <th className="px-6 py-4">Action</th>
+                                <th className="px-6 py-4">Entity</th>
+                                <th className="px-6 py-4">Metadata</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {Array.from({ length: 10 }).map((_, i) => (
+                                <tr key={i} className="border-b border-slate-50">
+                                    <td className="px-6 py-4">
+                                        <Skeleton className="h-3 w-24" />
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <Skeleton className="h-4 w-32" />
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <Skeleton className="h-5 w-16" />
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <Skeleton className="h-4 w-28" />
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <Skeleton className="h-3 w-10" />
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
             ) : (
                 <div className="overflow-x-auto">
@@ -97,36 +140,53 @@ export default function AuditLogViewer() {
                         </thead>
                         <tbody className="divide-y divide-slate-50 text-sm">
                             {auditLogs.length === 0 ? (
-                                <tr><td colSpan={5} className="p-8 text-center text-slate-400">Nessun log trovato.</td></tr>
+                                <tr>
+                                    <td colSpan={5} className="px-6 py-4">
+                                        <EmptyState
+                                            title="Nessun log"
+                                            description="Non abbiamo trovato attività registrate che corrispondano ai criteri."
+                                        />
+                                    </td>
+                                </tr>
                             ) : (
-                                auditLogs.map((log) => (
-                                    <tr key={log.id} className="hover:bg-slate-50">
-                                        <td className="px-6 py-4 whitespace-nowrap text-slate-500 text-xs font-mono">
-                                            {new Date(log.createdAt).toLocaleString()}
-                                        </td>
-                                        <td className="px-6 py-4 font-bold text-[#0b224e] whitespace-nowrap">
-                                            {log.actorUser?.email ?? "Sistema"}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className="inline-flex px-2 py-1 rounded bg-slate-100 font-mono text-xs font-bold text-slate-700">
-                                                {log.action}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-slate-600">
-                                            {log.entity} <span className="text-slate-400 text-xs font-mono">{log.entityId}</span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <details className="group cursor-pointer">
-                                                <summary className="text-xs text-[#0b224e] font-bold flex items-center gap-1 group-hover:underline list-none">
-                                                    <FaCode /> JSON
-                                                </summary>
-                                                <pre className="mt-2 text-[10px] bg-slate-900 text-green-400 p-2 rounded overflow-x-auto max-w-[200px] md:max-w-md">
-                                                    {JSON.stringify(log.metadataJson, null, 2)}
-                                                </pre>
-                                            </details>
-                                        </td>
-                                    </tr>
-                                ))
+                                auditLogs.map((log) => {
+                                    const visuals = getActionVisuals(log.action);
+                                    return (
+                                        <tr key={log.id} className="hover:bg-slate-50 transition-colors">
+                                            <td className="px-6 py-4 whitespace-nowrap text-slate-400 text-[10px] font-mono">
+                                                <div>{new Date(log.createdAt).toLocaleDateString()}</div>
+                                                <div className="text-slate-300">{new Date(log.createdAt).toLocaleTimeString()}</div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="font-bold text-[#0b224e] text-xs truncate max-w-[120px]" title={log.actorUser?.email ?? "Sistema"}>
+                                                    {log.actorUser?.email.split('@')[0] ?? "Sistema"}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${visuals.bg} ${visuals.text}`}>
+                                                    {visuals.icon}
+                                                    {log.action.replace(/_/g, " ")}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="text-xs font-semibold text-slate-700">{log.entity}</div>
+                                                <div className="text-[10px] text-slate-400 font-mono truncate max-w-[100px]" title={log.entityId ?? ""}>{log.entityId}</div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <details className="group cursor-pointer">
+                                                    <summary className="text-[10px] text-[#0b224e] font-black flex items-center gap-1 group-hover:underline list-none uppercase tracking-tighter">
+                                                        <FaCode size={10} /> Dati
+                                                    </summary>
+                                                    <div className="fixed md:relative z-50 md:z-auto left-4 right-4 md:left-auto md:right-auto mt-2">
+                                                        <pre className="text-[9px] bg-slate-900 text-green-400 p-3 rounded-xl overflow-x-auto shadow-2xl border border-slate-800 max-h-40">
+                                                            {JSON.stringify(log.metadataJson, null, 2)}
+                                                        </pre>
+                                                    </div>
+                                                </details>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
                             )}
                         </tbody>
                     </table>

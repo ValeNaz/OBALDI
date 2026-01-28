@@ -2,7 +2,7 @@ import { prisma } from "@/src/core/db";
 import { requireRole, requireSession } from "@/src/core/auth/guard";
 import Link from "next/link";
 import { FaPlus } from "react-icons/fa";
-import ProductListTable from "@/components/admin/ProductListTable";
+import AdminProductsTableWrapper from "@/components/admin/AdminProductsTableWrapper";
 
 export const metadata = {
     title: "Gestione Prodotti | Admin Console",
@@ -36,17 +36,18 @@ export default async function AdminProductsPage({
         include: {
             seller: true,
             variants: true,
+            media: {
+                orderBy: { sortOrder: "asc" },
+                take: 1
+            },
             _count: {
                 select: { variants: true }
             }
         }
     });
 
-    const handleDelete = async (id: string) => {
-        "use client"; // This is problematic in a Server Component. 
-        // I should probably move the delete logic to a client wrapper or use a trick.
-        // Actually, let's keep the table as a Client Component (it is) and pass the handler.
-    };
+    // Handlers are in the wrapper component
+
 
     return (
         <div className="container-max page-pad py-8">
@@ -91,10 +92,8 @@ export default async function AdminProductsPage({
                 </Link>
             </div>
 
-            <ProductListTable
+            <AdminProductsTableWrapper
                 products={products as any}
-                basePath="/admin/products"
-                role="ADMIN"
             />
         </div>
     );

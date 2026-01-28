@@ -10,6 +10,7 @@ import { categories } from "@/lib/homeData";
 import CartDropdown from "@/components/CartDropdown";
 import UserMenu from "@/components/UserMenu";
 import NotificationBell from "@/components/NotificationBell";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { FaCoins, FaBars, FaTimes, FaSearch } from "react-icons/fa";
 
 const Header = () => {
@@ -102,19 +103,19 @@ const Header = () => {
               <div className="hidden md:flex items-center space-x-2">
                 <Link
                   href="/about"
-                  className="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-[#0b224e] rounded-full hover:bg-white/60 transition-all"
+                  className="px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-[#0b224e] dark:hover:text-white rounded-full hover:bg-white/60 dark:hover:bg-slate-800 transition-all"
                 >
                   Chi siamo
                 </Link>
                 <Link
                   href="/membership"
-                  className="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-[#0b224e] rounded-full hover:bg-white/60 transition-all"
+                  className="px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-[#0b224e] dark:hover:text-white rounded-full hover:bg-white/60 dark:hover:bg-slate-800 transition-all"
                 >
                   Unisciti a noi
                 </Link>
                 <Link
                   href="/marketplace"
-                  className="relative group px-6 py-2.5 bg-[#0b224e] text-white text-sm font-bold rounded-full overflow-hidden transition-all hover:scale-[1.03] hover:shadow-glow-soft ml-2"
+                  className="relative group px-6 py-2.5 bg-[#0b224e] dark:bg-white dark:text-[#0b224e] text-white text-sm font-bold rounded-full overflow-hidden transition-all hover:scale-[1.03] hover:shadow-glow-soft ml-2"
                 >
                   <span className="relative z-10 flex items-center gap-2">
                     Marketplace
@@ -125,12 +126,13 @@ const Header = () => {
             </nav>
 
             <div className="flex items-center space-x-2 md:space-x-3">
+              <ThemeToggle />
               <CartDropdown />
               {user ? (
                 <div className="flex items-center space-x-1 md:space-x-2">
                   {user.isPremium && (
-                    <div className="hidden sm:flex items-center bg-white/70 px-4 py-2 rounded-full border border-amber-200/60 text-[10px] md:text-xs font-bold text-amber-900 shadow-sm">
-                      <FaCoins className="mr-1 md:mr-2 text-amber-600" /> {points}
+                    <div className="hidden sm:flex items-center bg-white/70 dark:bg-slate-900/60 px-4 py-2 rounded-full border border-amber-200/60 dark:border-amber-900/40 text-[10px] md:text-xs font-bold text-amber-900 dark:text-amber-400 shadow-sm">
+                      <FaCoins className="mr-1 md:mr-2 text-amber-600 dark:text-amber-400" /> {points}
                     </div>
                   )}
                   <NotificationBell />
@@ -139,7 +141,7 @@ const Header = () => {
               ) : (
                 <Link
                   href="/login"
-                  className="px-4 md:px-6 py-2 md:py-2.5 text-xs md:text-sm font-semibold rounded-full bg-[#0b224e] text-white hover:bg-[#1a3a6e] transition-all"
+                  className="px-4 md:px-6 py-2 md:py-2.5 text-xs md:text-sm font-semibold rounded-full bg-[#0b224e] dark:bg-white dark:text-[#0b224e] text-white hover:bg-[#1a3a6e] dark:hover:bg-slate-200 transition-all"
                 >
                   Accedi
                 </Link>
@@ -203,14 +205,14 @@ const Header = () => {
               <div className="hidden lg:block w-full">
                 <form
                   onSubmit={handleSearchSubmit}
-                  className="flex w-full items-stretch gap-2 bg-white/70 rounded-2xl border border-white/70 p-2 shadow-sm"
+                  className="flex w-full items-stretch gap-2 bg-white/70 dark:bg-slate-900/60 rounded-2xl border border-white/70 dark:border-white/10 p-2 shadow-sm"
                   role="search"
                 >
                   <select
                     id="marketplace-category"
                     value={selectedCategory}
                     onChange={(event) => handleCategoryChangeInSearch(event.target.value)}
-                    className="rounded-xl bg-white/80 px-3 text-xs font-semibold text-slate-600 outline-none"
+                    className="rounded-xl bg-white/80 dark:bg-slate-800/80 px-3 text-xs font-semibold text-slate-600 dark:text-slate-200 outline-none"
                     aria-label="Seleziona categoria"
                   >
                     <option value="ALL">Tutte le categorie</option>
@@ -226,11 +228,11 @@ const Header = () => {
                     placeholder="Cerca prodotti..."
                     value={searchQuery}
                     onChange={(event) => setSearchQuery(event.target.value)}
-                    className="flex-1 bg-transparent px-2 text-sm text-slate-700 outline-none"
+                    className="flex-1 bg-transparent px-2 text-sm text-slate-700 dark:text-slate-200 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   />
                   <button
                     type="submit"
-                    className="rounded-xl bg-[#0b224e] px-4 text-sm font-semibold text-white hover:bg-[#1a3a6e]"
+                    className="rounded-xl bg-[#0b224e] dark:bg-white dark:text-[#0b224e] px-4 text-sm font-semibold text-white hover:bg-[#1a3a6e] dark:hover:bg-slate-200"
                   >
                     Cerca
                   </button>
@@ -241,18 +243,19 @@ const Header = () => {
                 <div className="hidden md:flex items-center gap-2">
                   <Link
                     href="/orders"
-                    className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-600 hover:text-[#0b224e] transition-colors"
+                    className="inline-flex items-center gap-2 rounded-full bg-white/70 dark:bg-slate-900/60 px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 hover:text-[#0b224e] dark:hover:text-white transition-colors"
                   >
                     Ordini
                   </Link>
                   <Link
                     href="/profile#wishlist"
-                    className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-600 hover:text-[#0b224e] transition-colors"
+                    className="inline-flex items-center gap-2 rounded-full bg-white/70 dark:bg-slate-900/60 px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 hover:text-[#0b224e] dark:hover:text-white transition-colors"
                   >
                     Preferiti
                   </Link>
                 </div>
 
+                <ThemeToggle />
                 <CartDropdown />
 
                 {user ? (
@@ -260,9 +263,9 @@ const Header = () => {
                     {/* Punti - visibili per tutti gli utenti loggati */}
                     <Link
                       href="/profile"
-                      className="flex items-center bg-white/70 px-3 py-1.5 rounded-full border border-amber-200/60 text-[10px] md:text-xs font-bold text-amber-900 shadow-sm hover:bg-amber-50 transition-colors"
+                      className="flex items-center bg-white/70 dark:bg-slate-900/60 px-3 py-1.5 rounded-full border border-amber-200/60 dark:border-amber-900/40 text-[10px] md:text-xs font-bold text-amber-900 dark:text-amber-400 shadow-sm hover:bg-amber-50 dark:hover:bg-slate-800 transition-colors"
                     >
-                      <FaCoins className="mr-1.5 text-amber-600" />
+                      <FaCoins className="mr-1.5 text-amber-600 dark:text-amber-400" />
                       <span>{points}</span>
                     </Link>
                     <NotificationBell />
@@ -271,7 +274,7 @@ const Header = () => {
                 ) : (
                   <Link
                     href="/login"
-                    className="px-4 md:px-6 py-2 md:py-2.5 text-xs md:text-sm font-semibold rounded-full bg-[#0b224e] text-white hover:bg-[#1a3a6e] transition-all"
+                    className="px-4 md:px-6 py-2 md:py-2.5 text-xs md:text-sm font-semibold rounded-full bg-[#0b224e] dark:bg-white dark:text-[#0b224e] text-white hover:bg-[#1a3a6e] dark:hover:bg-slate-200 transition-all"
                   >
                     Accedi
                   </Link>
@@ -283,7 +286,7 @@ const Header = () => {
             <div className="lg:hidden">
               <form
                 onSubmit={handleSearchSubmit}
-                className="flex w-full items-stretch gap-1.5 bg-white/70 rounded-2xl border border-white/50 p-1.5 shadow-sm"
+                className="flex w-full items-stretch gap-1.5 bg-white/70 dark:bg-slate-900/60 rounded-2xl border border-white/50 dark:border-white/10 p-1.5 shadow-sm"
                 role="search"
               >
                 <input
@@ -291,11 +294,11 @@ const Header = () => {
                   placeholder="Cerca prodotti..."
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
-                  className="flex-1 bg-transparent px-3 text-xs md:text-sm text-slate-700 outline-none"
+                  className="flex-1 bg-transparent px-3 text-xs md:text-sm text-slate-700 dark:text-slate-200 outline-none"
                 />
                 <button
                   type="submit"
-                  className="rounded-xl bg-[#0b224e] p-2 aspect-square flex items-center justify-center text-white"
+                  className="rounded-xl bg-[#0b224e] dark:bg-white dark:text-[#0b224e] p-2 aspect-square flex items-center justify-center text-white"
                   aria-label="Cerca"
                 >
                   <FaSearch size={14} />

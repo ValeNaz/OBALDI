@@ -22,8 +22,8 @@ export default function ChiSiamo() {
   return (
     <div className="relative overflow-hidden bg-gradient-to-b from-slate-50 via-white to-slate-50">
       {/* Background Elements */}
-      <div className="pointer-events-none absolute -top-40 right-[-15%] h-[600px] w-[600px] rounded-full bg-gradient-to-br from-[#0b224e]/8 to-[#0b224e]/3 blur-[120px]" />
-      <div className="pointer-events-none absolute top-[60%] left-[-15%] h-[500px] w-[500px] rounded-full bg-gradient-to-tr from-[#a41f2e]/8 to-[#a41f2e]/3 blur-[120px]" />
+      <div className="hidden md:block pointer-events-none absolute -top-40 right-[-15%] h-[600px] w-[600px] rounded-full bg-gradient-to-br from-[#0b224e]/8 to-[#0b224e]/3 blur-[120px]" />
+      <div className="hidden md:block pointer-events-none absolute top-[60%] left-[-15%] h-[500px] w-[500px] rounded-full bg-gradient-to-tr from-[#a41f2e]/8 to-[#a41f2e]/3 blur-[120px]" />
 
       <main className="container-max page-pad">
         {/* Hero Section - Redesigned */}

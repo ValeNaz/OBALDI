@@ -4,6 +4,8 @@ import Script from "next/script";
 import { Manrope, Sora } from "next/font/google";
 import { UserProvider } from "../context/UserContext";
 import { CartProvider } from "../context/CartContext";
+import { UIProvider } from "../context/UIContext";
+import { ThemeProvider } from "@/components/theme-provider";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 
@@ -64,11 +66,21 @@ export default function RootLayout({
       <body className={`${sora.variable} ${manrope.variable} font-body`} suppressHydrationWarning>
         <UserProvider>
           <CartProvider>
-            <div className="min-h-screen flex flex-col">
-              <Header />
-              <main id="top" className="flex-grow">{children}</main>
-              <Footer />
-            </div>
+            <UIProvider>
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="light"
+                forcedTheme="light"
+                enableSystem={false}
+                disableTransitionOnChange
+              >
+                <div className="min-h-screen flex flex-col">
+                  <Header />
+                  <main id="top" className="flex-grow">{children}</main>
+                  <Footer />
+                </div>
+              </ThemeProvider>
+            </UIProvider>
           </CartProvider>
         </UserProvider>
         {plausibleDomain ? (

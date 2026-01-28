@@ -1,10 +1,26 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/src/core/db";
 import { AuthError, requireRole, requireSession } from "@/src/core/auth/guard";
+import { getClientIp, rateLimit } from "@/src/core/security/rate-limit";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const status = url.searchParams.get("status") ?? "PENDING";
+
+  const ip = getClientIp(request);
+  const limiter = rateLimit({
+    key: `admin:products:list:${ip}`,
+    limit: 60,
+    windowMs: 60 * 1000
+  });
+
+  if (!limiter.allowed) {
+    const retryAfter = Math.ceil((limiter.resetAt - Date.now()) / 1000);
+    return NextResponse.json(
+      { error: { code: "RATE_LIMITED", message: "Too many requests." } },
+      { status: 429, headers: { "Retry-After": String(retryAfter) } }
+    );
+  }
 
   try {
     const session = await requireSession();
@@ -41,6 +57,21 @@ export async function POST(request: Request) {
   try {
     const session = await requireSession();
     requireRole(session.user.role, ["ADMIN"]);
+
+    const ip = getClientIp(request);
+    const limiter = rateLimit({
+      key: `admin:products:create:${ip}`,
+      limit: 20,
+      windowMs: 60 * 1000
+    });
+
+    if (!limiter.allowed) {
+      const retryAfter = Math.ceil((limiter.resetAt - Date.now()) / 1000);
+      return NextResponse.json(
+        { error: { code: "RATE_LIMITED", message: "Too many requests." } },
+        { status: 429, headers: { "Retry-After": String(retryAfter) } }
+      );
+    }
 
     const body = await request.json();
 

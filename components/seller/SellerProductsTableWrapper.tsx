@@ -2,31 +2,47 @@
 
 import ProductListTable from "@/components/admin/ProductListTable";
 import { useRouter } from "next/navigation";
+import { useUI } from "@/context/UIContext";
 
 export default function SellerProductsTableWrapper({ products }: { products: any[] }) {
     const router = useRouter();
+    const { showToast, confirm } = useUI();
 
     const handleDelete = async (id: string) => {
-        if (!confirm("Sei sicuro di voler eliminare questo prodotto?")) return;
+        const confirmed = await confirm({
+            title: "Elimina Prodotto",
+            message: "Sei sicuro di voler eliminare questo prodotto? Questa azione non può essere annullata.",
+            confirmText: "Elimina",
+            variant: "danger"
+        });
+        if (!confirmed) return;
+
         try {
             const res = await fetch(`/api/seller/products/${id}`, { method: "DELETE" });
             if (!res.ok) throw new Error("Errore durante l'eliminazione");
-            alert("Prodotto eliminato");
+            showToast("Prodotto eliminato con successo", "success");
             router.refresh();
         } catch (err) {
-            alert("Errore eliminazione");
+            showToast("Errore durante l'eliminazione", "error");
         }
     };
 
     const handleSubmitForReview = async (id: string) => {
-        if (!confirm("Inviare per revisione?")) return;
+        const confirmed = await confirm({
+            title: "Invia per Revisione",
+            message: "Vuoi inviare questo prodotto per la revisione? Non potrai modificarlo finché l'admin non avrà terminato la revisione.",
+            confirmText: "Invia",
+            variant: "primary"
+        });
+        if (!confirmed) return;
+
         try {
             const res = await fetch(`/api/seller/products/${id}/submit`, { method: "POST" });
             if (!res.ok) throw new Error("Errore durante l'invio");
-            alert("Inviato per revisione");
+            showToast("Prodotto inviato per la revisione", "success");
             router.refresh();
         } catch (err) {
-            alert("Errore invio");
+            showToast("Errore durante l'invio per revisione", "error");
         }
     };
 

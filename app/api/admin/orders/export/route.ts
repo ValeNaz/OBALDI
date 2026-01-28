@@ -28,7 +28,7 @@ export async function GET(request: Request) {
 
   const url = new URL(request.url);
   const status = url.searchParams.get("status");
-  const where = status && allowedStatuses.has(status) ? { status } : {};
+  const where = status && allowedStatuses.has(status) ? { status: status as "CREATED" | "PAID" | "CANCELED" | "REFUNDED" } : {};
 
   const orders = await prisma.order.findMany({
     where,

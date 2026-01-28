@@ -21,7 +21,7 @@ export async function GET(request: Request) {
 
   const url = new URL(request.url);
   const status = url.searchParams.get("status");
-  const where = status && allowedStatuses.has(status) ? { status } : {};
+  const where = status && allowedStatuses.has(status) ? { status: status as "OPEN" | "IN_REVIEW" | "DONE" } : {};
 
   const requests = await prisma.purchaseAssistRequest.findMany({
     where,

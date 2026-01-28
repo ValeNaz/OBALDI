@@ -38,6 +38,10 @@ export default async function SellerProductsPage({
             variants: {
                 select: { stockQty: true }
             },
+            media: {
+                orderBy: { sortOrder: "asc" },
+                take: 1
+            },
             _count: {
                 select: { variants: true }
             }

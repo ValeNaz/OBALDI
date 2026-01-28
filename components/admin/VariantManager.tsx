@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FaSync, FaTrash, FaEdit, FaSave, FaTimes } from "react-icons/fa";
+import { FaSync, FaTrash, FaEdit, FaSave, FaTimes, FaBox } from "react-icons/fa";
 
 type Variant = {
     id: string;
@@ -28,6 +28,8 @@ type VariantManagerProps = {
     onGenerateVariants: () => Promise<void>;
 };
 
+import { useUI } from "@/context/UIContext";
+
 export default function VariantManager({
     productId,
     variants,
@@ -37,25 +39,32 @@ export default function VariantManager({
     onDeleteVariant,
     onGenerateVariants
 }: VariantManagerProps) {
+    const { showToast, confirm } = useUI();
     const [generating, setGenerating] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editForm, setEditForm] = useState<Partial<Variant>>({});
 
     const handleGenerate = async () => {
         if (options.length === 0) {
-            alert("Definisci prima le opzioni nella scheda 'Opzioni'.");
+            showToast("Definisci prima le opzioni nella scheda 'Opzioni'.", "error");
             return;
         }
         if (variants.length > 0) {
-            if (!confirm("Tutte le varianti esistenti verranno mantenute. Verranno generate solo quelle mancanti. Continuare?")) return;
+            const confirmed = await confirm({
+                title: "Rigenera Varianti",
+                message: "Tutte le varianti esistenti verranno mantenute. Verranno generate solo quelle mancanti. Continuare?",
+                confirmText: "Continua",
+                variant: "primary"
+            });
+            if (!confirmed) return;
         }
 
         setGenerating(true);
         try {
             await onGenerateVariants();
-            alert("Varianti generate correttamente!");
+            showToast("Varianti generate correttamente!", "success");
         } catch (err) {
-            alert("Errore durante la generazione.");
+            showToast("Errore durante la generazione.", "error");
         } finally {
             setGenerating(false);
         }
@@ -76,23 +85,23 @@ export default function VariantManager({
         try {
             await onSaveVariant(editForm);
             setEditingId(null);
-            alert("Variante aggiornata!");
+            showToast("Variante aggiornata!", "success");
         } catch (err) {
-            alert("Errore durante l'aggiornamento.");
+            showToast("Errore durante l'aggiornamento.", "error");
         }
     };
 
     return (
         <div className="glass-panel p-6">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <div>
                     <h3 className="font-bold text-lg text-[#0b224e]">Varianti Prodotto</h3>
-                    <p className="text-sm text-slate-500">Gestisci stock, SKU e prezzi specifici per ogni variante.</p>
+                    <p className="text-sm text-slate-500">Gestisci stock, SKU e prezzi.</p>
                 </div>
                 <button
                     onClick={handleGenerate}
                     disabled={generating}
-                    className="flex items-center gap-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-100 transition disabled:opacity-50"
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#0b224e] text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-900 transition disabled:opacity-50 shadow-md"
                 >
                     <FaSync className={generating ? "animate-spin" : ""} />
                     {generating ? "Generazione..." : "Genera Varianti"}
@@ -104,9 +113,9 @@ export default function VariantManager({
                     <thead className="bg-slate-50 text-slate-500 text-[10px] uppercase tracking-widest font-bold">
                         <tr>
                             <th className="px-4 py-3">Variante</th>
-                            <th className="px-4 py-3">Immagine</th>
-                            <th className="px-4 py-3">SKU</th>
-                            <th className="px-4 py-3">Prezzo (€)</th>
+                            <th className="px-4 py-3 hidden md:table-cell">Immagine</th>
+                            <th className="px-4 py-3 hidden lg:table-cell">SKU</th>
+                            <th className="px-4 py-3 hidden sm:table-cell">Prezzo</th>
                             <th className="px-4 py-3">Stock</th>
                             <th className="px-4 py-3 text-right">Azioni</th>
                         </tr>
@@ -126,33 +135,53 @@ export default function VariantManager({
                                         <div className="text-[10px] text-slate-400">
                                             {Object.entries(v.attributesJson as object).map(([k, val]) => `${k}: ${val}`).join(", ")}
                                         </div>
+                                        {/* Mobile visible price/sku fallback */}
+                                        <div className="sm:hidden mt-1 text-[10px] space-x-2">
+                                            {v.priceCents && <span className="font-bold text-[#0b224e]">€{(v.priceCents / 100).toFixed(2)}</span>}
+                                            {v.sku && <span className="text-slate-400">SKU: {v.sku}</span>}
+                                        </div>
                                     </td>
-                                    <td className="px-4 py-4">
+                                    <td className="px-4 py-4 hidden md:table-cell">
                                         {editingId === v.id ? (
-                                            <div className="flex items-center gap-2">
-                                                <select
-                                                    className="glass-input py-1 px-2 text-xs w-24"
-                                                    value={editForm.mediaIndex ?? ""}
-                                                    onChange={e => setEditForm(prev => ({ ...prev, mediaIndex: e.target.value === "" ? null : parseInt(e.target.value) }))}
-                                                >
-                                                    <option value="">Nessuna</option>
-                                                    {media.map((_, idx) => (
-                                                        <option key={idx} value={idx}>Img #{idx + 1}</option>
+                                            <div className="flex flex-col gap-2">
+                                                <div className="flex flex-wrap gap-1 max-w-[150px] p-2 bg-slate-50 border border-slate-200 rounded-lg">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setEditForm(prev => ({ ...prev, mediaIndex: null }))}
+                                                        className={`w-8 h-8 rounded border flex items-center justify-center text-[10px] transition ${editForm.mediaIndex === null ? "border-blue-500 bg-blue-50 text-blue-600 font-bold" : "border-slate-200 bg-white text-slate-400"}`}
+                                                        title="Nessuna immagine"
+                                                    >
+                                                        X
+                                                    </button>
+                                                    {media.map((m, idx) => (
+                                                        <button
+                                                            key={idx}
+                                                            type="button"
+                                                            onClick={() => setEditForm(prev => ({ ...prev, mediaIndex: idx }))}
+                                                            className={`w-8 h-8 rounded border overflow-hidden transition relative ${editForm.mediaIndex === idx ? "border-blue-500 ring-2 ring-blue-200" : "border-slate-200 opacity-60 hover:opacity-100"}`}
+                                                        >
+                                                            <img src={m.url} className="w-full h-full object-cover" alt="" />
+                                                            {editForm.mediaIndex === idx && (
+                                                                <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
+                                                                    <div className="bg-blue-500 text-white rounded-full w-3 h-3 flex items-center justify-center text-[8px]">✓</div>
+                                                                </div>
+                                                            )}
+                                                        </button>
                                                     ))}
-                                                </select>
-                                                {editForm.mediaIndex !== null && editForm.mediaIndex !== undefined && media[editForm.mediaIndex] && (
-                                                    <img src={media[editForm.mediaIndex].url} className="w-8 h-8 object-cover rounded" alt="" />
-                                                )}
+                                                </div>
+                                                <span className="text-[10px] text-slate-400">Seleziona immagine variante</span>
                                             </div>
                                         ) : (
                                             v.mediaIndex !== null && v.mediaIndex !== undefined && media[v.mediaIndex] ? (
-                                                <img src={media[v.mediaIndex].url} className="w-8 h-8 object-cover rounded border border-slate-200" alt="Variant" />
+                                                <img src={media[v.mediaIndex].url} className="w-10 h-10 object-cover rounded shadow-sm border border-white" alt="Variant" />
                                             ) : (
-                                                <span className="text-slate-300 text-xs italic">Nessuna</span>
+                                                <div className="w-10 h-10 rounded bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-300">
+                                                    <FaBox size={14} />
+                                                </div>
                                             )
                                         )}
                                     </td>
-                                    <td className="px-4 py-4">
+                                    <td className="px-4 py-4 hidden lg:table-cell">
                                         {editingId === v.id ? (
                                             <input
                                                 type="text"
@@ -164,7 +193,7 @@ export default function VariantManager({
                                             <span className="text-slate-500 font-mono text-xs">{v.sku || "-"}</span>
                                         )}
                                     </td>
-                                    <td className="px-4 py-4">
+                                    <td className="px-4 py-4 hidden sm:table-cell">
                                         {editingId === v.id ? (
                                             <input
                                                 type="number"

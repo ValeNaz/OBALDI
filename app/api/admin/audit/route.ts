@@ -29,11 +29,11 @@ export async function GET(request: Request) {
 
   const where = query
     ? {
-        OR: [
-          { action: { contains: query, mode: "insensitive" } },
-          { entity: { contains: query, mode: "insensitive" } }
-        ]
-      }
+      OR: [
+        { action: { contains: query, mode: "insensitive" as const } },
+        { entity: { contains: query, mode: "insensitive" as const } }
+      ]
+    }
     : undefined;
 
   const logs = await prisma.auditLog.findMany({

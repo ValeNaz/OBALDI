@@ -89,7 +89,7 @@ export async function POST(
     );
   }
 
-  const updateData = { ...parsedChanges.data };
+  const updateData: Record<string, any> = { ...parsedChanges.data };
 
   const nextPointsEligible =
     updateData.pointsEligible ?? product.pointsEligible;

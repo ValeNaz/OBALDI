@@ -10,8 +10,9 @@ export const calculateRenewalPoints = (plan: MembershipPlan) => {
   }
 
   const conversionRate =
-    typeof plan.pointsConversionRate === "object" &&
-    "toNumber" in plan.pointsConversionRate
+    plan.pointsConversionRate !== null &&
+      typeof plan.pointsConversionRate === "object" &&
+      "toNumber" in plan.pointsConversionRate
       ? plan.pointsConversionRate.toNumber()
       : Number(plan.pointsConversionRate ?? 0);
 

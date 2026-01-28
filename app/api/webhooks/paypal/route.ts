@@ -81,7 +81,7 @@ export async function POST(request: Request) {
           provider: "PAYPAL",
           eventId: parsed.data.id,
           type: parsed.data.event_type,
-          payload: event as Record<string, unknown>
+          payload: event as any
         }
       });
     }
@@ -155,11 +155,11 @@ export async function POST(request: Request) {
     let pointsAwarded = 0;
     let membershipNotify:
       | {
-          to: string;
-          planCode: string;
-          currentPeriodEnd: Date;
-          pointsAwarded: number;
-        }
+        to: string;
+        planCode: string;
+        currentPeriodEnd: Date;
+        pointsAwarded: number;
+      }
       | null = null;
     if (nextPeriodEnd.getTime() > previousPeriodEnd.getTime()) {
       pointsAwarded = calculateRenewalPoints(membership.plan);

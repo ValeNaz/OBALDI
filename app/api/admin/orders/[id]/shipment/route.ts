@@ -185,7 +185,10 @@ export async function PATCH(
 
     const order = await prisma.order.findUnique({
         where: { id: orderId },
-        include: { shipment: true }
+        include: {
+            shipment: true,
+            user: { select: { email: true, firstName: true } }
+        }
     });
 
     if (!order || !order.shipment) {
