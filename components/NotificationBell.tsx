@@ -106,6 +106,8 @@ const NotificationBell = () => {
                 return FaCoins;
             case "MEMBERSHIP_RENEWED":
                 return FaGift;
+            case "NEW_MESSAGE":
+                return FaInbox;
             default:
                 return FaBell;
         }

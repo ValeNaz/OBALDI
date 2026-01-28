@@ -357,6 +357,16 @@ export default function ProfilePage() {
           </Link>
         </div>
 
+        <div className="glass-card card-pad">
+          <h2 className="text-xl font-bold text-[#0b224e] mb-4">Messaggi</h2>
+          <p className="text-sm text-slate-500 mb-4">
+            Contatta il supporto o visualizza le tue segnalazioni attive.
+          </p>
+          <Link href="/profile/chat" className="inline-flex text-sm font-bold text-[#0b224e]">
+            Vai ai messaggi →
+          </Link>
+        </div>
+
         <div className="glass-card card-pad lg:col-span-2">
           <h2 className="text-xl font-bold text-[#0b224e] mb-4">Sicurezza</h2>
           <p className="text-sm text-slate-500 mb-6">

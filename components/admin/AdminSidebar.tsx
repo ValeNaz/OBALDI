@@ -13,7 +13,8 @@ import {
     FaHistory,
     FaNewspaper,
     FaUsers,
-    FaSignOutAlt
+    FaSignOutAlt,
+    FaComments
 } from "react-icons/fa";
 import { useUI } from "@/context/UIContext";
 
@@ -99,6 +100,7 @@ const AdminSidebar = () => {
                 <NavItem href="/admin/changes" icon={FaExchangeAlt} label="Modifiche" badge={counts.changes} />
                 <NavItem href="/admin/audit" icon={FaHistory} label="Audit Log" />
                 <NavItem href="/admin/news" icon={FaNewspaper} label="News" />
+                <NavItem href="/admin/messages" icon={FaComments} label="Messaggi" badge={counts.messages} />
                 <NavItem href="/admin/users" icon={FaUsers} label="Utenti" />
                 <div className="hidden lg:block h-px bg-slate-100 my-2 mx-2" />
                 <button

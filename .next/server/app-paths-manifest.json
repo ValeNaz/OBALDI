@@ -1,10 +1,11 @@
 {
+  "/page": "app/page.js",
   "/api/notifications/route": "app/api/notifications/route.js",
-  "/login/page": "app/login/page.js",
-  "/api/admin/notifications/route": "app/api/admin/notifications/route.js",
   "/api/me/route": "app/api/me/route.js",
-  "/admin/page": "app/admin/page.js",
-  "/seller/products/page": "app/seller/products/page.js",
-  "/admin/orders/page": "app/admin/orders/page.js",
-  "/admin/products/page": "app/admin/products/page.js"
+  "/api/conversations/[id]/messages/route": "app/api/conversations/[id]/messages/route.js",
+  "/api/admin/notifications/route": "app/api/admin/notifications/route.js",
+  "/api/conversations/route": "app/api/conversations/route.js",
+  "/api/sse/chat/route": "app/api/sse/chat/route.js",
+  "/api/conversations/[id]/route": "app/api/conversations/[id]/route.js",
+  "/admin/messages/page": "app/admin/messages/page.js"
 }

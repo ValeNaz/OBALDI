@@ -9,6 +9,7 @@ type NotificationType =
     | "PRODUCT_REJECTED"
     | "POINTS_EARNED"
     | "MEMBERSHIP_RENEWED"
+    | "NEW_MESSAGE"
     | "SYSTEM";
 
 interface CreateNotificationParams {
@@ -24,7 +25,7 @@ export async function createNotification(params: CreateNotificationParams) {
         const notification = await prisma.notification.create({
             data: {
                 userId: params.userId,
-                type: params.type,
+                type: params.type as any,
                 title: params.title,
                 message: params.message,
                 link: params.link,
@@ -150,6 +151,16 @@ export async function notifyPaymentFailed(userId: string) {
         title: "Pagamento non riuscito",
         message: "Non siamo riusciti a processare il pagamento del tuo abbonamento. Aggiorna il metodo di pagamento.",
         link: `/billing`,
+    });
+}
+
+export async function notifyNewMessage(userId: string, senderName: string, conversationId: string, isAdmin: boolean) {
+    return createNotification({
+        userId,
+        type: "NEW_MESSAGE",
+        title: "Nuovo messaggio",
+        message: `Hai ricevuto un nuovo messaggio da ${senderName}`,
+        link: isAdmin ? `/admin/messages` : `/profile/chat`,
     });
 }
 

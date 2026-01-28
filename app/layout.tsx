@@ -8,6 +8,7 @@ import { UIProvider } from "../context/UIContext";
 import { ThemeProvider } from "@/components/theme-provider";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import FloatingChat from "../components/chat/FloatingChat";
 
 const sora = Sora({
   subsets: ["latin"],
@@ -78,6 +79,7 @@ export default function RootLayout({
                   <Header />
                   <main id="top" className="flex-grow">{children}</main>
                   <Footer />
+                  <FloatingChat />
                 </div>
               </ThemeProvider>
             </UIProvider>

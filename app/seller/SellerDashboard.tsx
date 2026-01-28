@@ -71,14 +71,19 @@ const SellerDashboard = () => {
         </div>
 
         <div className="glass-panel p-8 bg-[#0b224e] text-white">
-          <h2 className="text-xl font-bold mb-4">Supporto Venditori</h2>
+          <h2 className="text-xl font-bold mb-4">Supporto & Segnalazioni</h2>
           <p className="text-blue-100 text-sm leading-relaxed mb-6">
-            Hai dubbi sulla gestione delle varianti o sulla spedizione dei tuoi prodotti?
-            Il nostro team è qui per aiutarti a massimizzare le tue vendite.
+            Hai dubbi sulla gestione dei prodotti o vuoi segnalare un problema?
+            Il nostro team è qui per aiutarti.
           </p>
-          <button className="w-full py-3 bg-white text-[#0b224e] rounded-full font-bold hover:bg-blue-50 transition">
-            Contatta il Supporto
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Link href="/seller/support" className="flex-1 py-3 bg-white text-[#0b224e] rounded-full font-bold hover:bg-blue-50 transition text-center text-sm">
+              Supporto
+            </Link>
+            <Link href="/seller/reports" className="flex-1 py-3 bg-blue-900/40 text-white border border-blue-400/30 rounded-full font-bold hover:bg-blue-800 transition text-center text-sm">
+              Segnalazioni
+            </Link>
+          </div>
         </div>
       </div>
     </div>

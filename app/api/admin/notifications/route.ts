@@ -18,17 +18,30 @@ export async function GET() {
     }
 
     // counts for badges
-    const [pendingOrders, openAssist, pendingChanges] = await Promise.all([
-        prisma.order.count({ where: { status: "PAID" } }), // In this context "PAID" might mean it needs fulfillment, but usually "PENDING" is better. Let's check status enum.
+    const [pendingOrders, openAssist, pendingChanges, unreadChats] = await Promise.all([
+        prisma.order.count({ where: { status: "PAID" } }),
         prisma.purchaseAssistRequest.count({ where: { status: "OPEN" } }),
-        prisma.productChangeRequest.count({ where: { status: "PENDING" } })
+        prisma.productChangeRequest.count({ where: { status: "PENDING" } }),
+        (prisma as any).conversation.count({
+            where: {
+                participants: {
+                    some: {
+                        userId: session.user.id,
+                        OR: [
+                            { lastReadAt: { lt: (prisma as any).conversation.fields.lastMessageAt } }
+                        ]
+                    }
+                }
+            }
+        }).catch(() => 0)
     ]);
 
     return NextResponse.json({
         counts: {
             orders: pendingOrders,
             assist: openAssist,
-            changes: pendingChanges
+            changes: pendingChanges,
+            messages: unreadChats
         }
     });
 }
