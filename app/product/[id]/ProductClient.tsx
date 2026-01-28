@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useUser } from "../../../context/UserContext";
 import { useCart } from "@/context/CartContext";
 import ReviewList from "@/components/reviews/ReviewList";
 import WishlistButton from "@/components/wishlist/WishlistButton";
+import VariantSelector, { ProductOption, ProductVariant } from "@/components/product/VariantSelector";
+import ProductCarousel from "@/components/product/ProductCarousel";
 
 type ProductMedia = {
   id: string;
@@ -28,6 +29,8 @@ type ApiProduct = {
   stockQty: number;
   trackInventory: boolean;
   isOutOfStock: boolean;
+  variants?: ProductVariant[];
+  options?: ProductOption[];
 };
 
 type ProductClientProps = {
@@ -42,6 +45,27 @@ const ProductClient = ({ product }: ProductClientProps) => {
   const [actionLoading, setActionLoading] = useState(false);
   const [cancelMessage, setCancelMessage] = useState(false);
 
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
+
+  // Derived state based on selection
+  const hasVariants = product.variants && product.variants.length > 0;
+  // If variants exist, price/stock depends on variant.
+  // If no variant selected, maybe show range or "From X"? 
+  // For now, default to product base price, but disable actions if selection needed.
+
+  const currentPriceCents = selectedVariant?.priceCents ?? product.priceCents;
+  const currentStock = selectedVariant ? selectedVariant.stockQty : product.stockQty; // Note: product.stockQty might be aggregate or separate.
+  // Assuming product.stockQty is relevant for simple products. 
+  // If has variants, we rely on variant stock.
+
+  const isOutOfStock = product.trackInventory
+    ? (hasVariants ? (selectedVariant ? selectedVariant.stockQty <= 0 : false) : product.isOutOfStock)
+    : false;
+
+  // If has variants but none selected -> cannot buy
+  const canBuy = !product.trackInventory || !isOutOfStock;
+  const selectionComplete = !hasVariants || !!selectedVariant;
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
@@ -52,6 +76,11 @@ const ProductClient = ({ product }: ProductClientProps) => {
   }, [product.id]);
 
   const handleCheckout = async () => {
+    if (!selectionComplete) {
+      setActionError("Seleziona una variante per continuare.");
+      return;
+    }
+
     setActionError(null);
     setActionMessage(null);
     setActionLoading(true);
@@ -59,7 +88,11 @@ const ProductClient = ({ product }: ProductClientProps) => {
       const response = await fetch("/api/checkout/order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId: product.id, qty: 1 })
+        body: JSON.stringify({
+          productId: product.id,
+          qty: 1,
+          variantId: selectedVariant?.id
+        })
       });
       const payload = await response.json().catch(() => null);
       if (!response.ok) {
@@ -79,6 +112,11 @@ const ProductClient = ({ product }: ProductClientProps) => {
   };
 
   const handlePointsPurchase = async () => {
+    if (!selectionComplete) {
+      setActionError("Seleziona una variante.");
+      return;
+    }
+
     setActionError(null);
     setActionMessage(null);
     setActionLoading(true);
@@ -86,7 +124,11 @@ const ProductClient = ({ product }: ProductClientProps) => {
       const response = await fetch("/api/points/spend", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId: product.id, qty: 1 })
+        body: JSON.stringify({
+          productId: product.id,
+          qty: 1,
+          variantId: selectedVariant?.id
+        })
       });
       const payload = await response.json().catch(() => null);
       if (!response.ok) {
@@ -122,16 +164,22 @@ const ProductClient = ({ product }: ProductClientProps) => {
   const isPremium = Boolean(user?.isPremium);
 
   const handleAddToCart = () => {
+    if (!selectionComplete) {
+      setActionError("Seleziona le opzioni desiderate.");
+      return;
+    }
+
     addItem({
       productId: product.id,
-      title: product.title,
-      priceCents: product.priceCents,
+      title: selectedVariant ? `${product.title} (${selectedVariant.title})` : product.title,
+      priceCents: currentPriceCents,
       currency: product.currency,
       image: cartImage,
       qty: 1,
       pointsEligible: product.pointsEligible,
       pointsPrice: product.pointsPrice,
-      premiumOnly: product.premiumOnly
+      premiumOnly: product.premiumOnly,
+      variantId: selectedVariant?.id
     });
     if (!isMember) {
       window.location.href = "/membership";
@@ -139,7 +187,7 @@ const ProductClient = ({ product }: ProductClientProps) => {
     }
 
     // Check stock
-    if (product.trackInventory && product.isOutOfStock) {
+    if (!canBuy) {
       setActionError("Prodotto esaurito.");
       return;
     }
@@ -155,65 +203,20 @@ const ProductClient = ({ product }: ProductClientProps) => {
 
       <div className="grid md:grid-cols-2 gap-16">
         <div>
-          {mainMedia?.type === "VIDEO" ? (
-            <video
-              src={mainUrl}
-              controls
-              preload="metadata"
-              className="w-full rounded-3xl shadow-sm border border-white/50"
-            />
-          ) : (
-            <Image
-              src={mainUrl}
-              alt={product.title}
-              width={800}
-              height={600}
-              className="w-full rounded-3xl shadow-sm border border-white/50"
-            />
-          )}
-          <div className="grid grid-cols-4 gap-4 mt-4">
-            {(product.media.length > 1 ? product.media.slice(1, 5) : []).map((media) => (
-              <div key={media.id} className="aspect-square glass-panel overflow-hidden">
-                {media.type === "VIDEO" ? (
-                  <video
-                    src={media.url}
-                    muted
-                    playsInline
-                    preload="metadata"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <Image
-                    src={media.url}
-                    alt=""
-                    width={200}
-                    height={200}
-                    className="w-full h-full object-cover"
-                  />
-                )}
-              </div>
-            ))}
-            {product.media.length === 0 && (
-              <div className="aspect-square glass-panel overflow-hidden">
-                <Image
-                  src="https://picsum.photos/seed/1/200"
-                  alt=""
-                  width={200}
-                  height={200}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
-          </div>
+          <ProductCarousel media={product.media} selectedIndex={selectedVariant?.mediaIndex} />
         </div>
 
         <div className="flex flex-col">
           <div className="flex items-start justify-between">
-            <h1 className="text-4xl md:text-5xl font-display font-bold text-[#0b224e] mb-4">{product.title}</h1>
+            <h1 className="text-4xl md:text-5xl font-display font-bold text-[#0b224e] mb-2">{product.title}</h1>
             <WishlistButton productId={product.id} className="mt-2" />
           </div>
-          <div className="flex items-center space-x-4 mb-8">
-            <div className="text-3xl font-black text-[#0b224e]">€{(product.priceCents / 100).toFixed(2)}</div>
+          {selectedVariant && (
+            <div className="text-sm text-slate-500 font-medium mb-4">{selectedVariant.title}</div>
+          )}
+
+          <div className="flex items-center space-x-4 mb-4">
+            <div className="text-3xl font-black text-[#0b224e]">€{(currentPriceCents / 100).toFixed(2)}</div>
             <div className="text-sm text-slate-400 font-medium">Spedizione inclusa per i membri</div>
             {product.premiumOnly && (
               <span className="text-xs font-bold text-[#a41f2e] uppercase tracking-wider">Solo Premium</span>
@@ -224,6 +227,20 @@ const ProductClient = ({ product }: ProductClientProps) => {
           </div>
 
           <p className="text-slate-600 mb-8 leading-relaxed">{product.description}</p>
+
+          {/* Variant Selector */}
+          {hasVariants && product.options && (
+            <div className="mb-8">
+              <VariantSelector
+                options={product.options}
+                variants={product.variants!}
+                onVariantChange={setSelectedVariant}
+              />
+              {!selectionComplete && (
+                <p className="text-amber-600 text-sm mt-2 font-bold">Seleziona tutte le opzioni per vedere disponibilità e prezzo.</p>
+              )}
+            </div>
+          )}
 
           {cancelMessage && (
             <div className="mb-6 text-sm text-amber-700 font-semibold bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
@@ -270,24 +287,24 @@ const ProductClient = ({ product }: ProductClientProps) => {
                 <>
                   <button
                     onClick={handleAddToCart}
-                    disabled={product.isOutOfStock}
+                    disabled={!canBuy || !selectionComplete}
                     className="w-full py-3 border-2 border-slate-200 rounded-full font-bold text-[#0b224e] bg-white/70 hover:bg-white transition disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {product.isOutOfStock ? "Esaurito" : "Aggiungi al carrello"}
+                    {!canBuy && selectionComplete ? "Esaurito" : "Aggiungi al carrello"}
                   </button>
                   <button
                     onClick={handleCheckout}
-                    disabled={actionLoading}
-                    className="w-full py-4 bg-[#0b224e] text-white font-bold rounded-full hover:opacity-95 transition flex items-center justify-center shadow-glow-soft"
+                    disabled={actionLoading || !canBuy || !selectionComplete}
+                    className="w-full py-4 bg-[#0b224e] text-white font-bold rounded-full hover:opacity-95 transition flex items-center justify-center shadow-glow-soft disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {actionLoading ? "Avvio pagamento..." : "Procedi all'acquisto"}
                   </button>
                   {isPremium && product.pointsEligible && product.pointsPrice !== null && (() => {
-                    const maxPointsByPrice = Math.floor(product.priceCents / 100);
+                    const maxPointsByPrice = Math.floor(currentPriceCents / 100);
                     const maxPointsByProduct = product.pointsPrice ?? 0;
                     const maxPointsAllowed = Math.min(maxPointsByPrice, maxPointsByProduct);
                     const pointsToUse = Math.min(points, maxPointsAllowed);
-                    const remainingCents = product.priceCents - pointsToUse * 100;
+                    const remainingCents = currentPriceCents - pointsToUse * 100;
                     const remainingLabel = remainingCents > 0 ? ` + €${(remainingCents / 100).toFixed(2)}` : "";
                     const label =
                       pointsToUse > 0
@@ -296,9 +313,9 @@ const ProductClient = ({ product }: ProductClientProps) => {
 
                     return (
                       <button
-                        disabled={actionLoading || pointsToUse <= 0}
+                        disabled={actionLoading || pointsToUse <= 0 || !canBuy || !selectionComplete}
                         onClick={handlePointsPurchase}
-                        className={`w-full py-4 border-2 rounded-lg font-bold transition flex items-center justify-center ${pointsToUse > 0
+                        className={`w-full py-4 border-2 rounded-lg font-bold transition flex items-center justify-center ${pointsToUse > 0 && canBuy && selectionComplete
                           ? "border-slate-800 text-[#0b224e] bg-white/70 hover:bg-white"
                           : "border-slate-200 text-slate-300 cursor-not-allowed bg-white/40"
                           }`}

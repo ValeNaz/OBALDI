@@ -14,14 +14,15 @@ export type CartItem = {
   pointsEligible: boolean;
   pointsPrice: number | null;
   premiumOnly: boolean;
+  variantId?: string;
 };
 
 type CartContextValue = {
   items: CartItem[];
   itemCount: number;
   addItem: (item: CartItem) => void;
-  updateQty: (productId: string, qty: number) => void;
-  removeItem: (productId: string) => void;
+  updateQty: (productId: string, variantId: string | undefined, qty: number) => void;
+  removeItem: (productId: string, variantId?: string) => void;
   clearCart: () => void;
 };
 
@@ -44,16 +45,21 @@ const readStorage = (key: string) => {
 
 const mergeItems = (base: CartItem[], incoming: CartItem[]) => {
   const map = new Map<string, CartItem>();
+
+  // Key generator helper
+  const getKey = (item: CartItem) => `${item.productId}:${item.variantId || 'base'}`;
+
   for (const item of base) {
-    map.set(item.productId, { ...item });
+    map.set(getKey(item), { ...item });
   }
   for (const item of incoming) {
-    const existing = map.get(item.productId);
+    const key = getKey(item);
+    const existing = map.get(key);
     if (!existing) {
-      map.set(item.productId, { ...item });
+      map.set(key, { ...item });
     } else {
       existing.qty += item.qty;
-      map.set(item.productId, existing);
+      map.set(key, existing);
     }
   }
   return Array.from(map.values());
@@ -115,30 +121,39 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
 
   const addItem = (item: CartItem) => {
     setItems((prev) => {
-      const existing = prev.find((entry) => entry.productId === item.productId);
-      if (!existing) {
+      const existingIndex = prev.findIndex(
+        (entry) => entry.productId === item.productId && entry.variantId === item.variantId
+      );
+
+      if (existingIndex === -1) {
         return [...prev, { ...item, qty: Math.max(1, item.qty) }];
       }
-      return prev.map((entry) =>
-        entry.productId === item.productId
-          ? { ...entry, qty: entry.qty + Math.max(1, item.qty) }
-          : entry
-      );
+
+      const newItems = [...prev];
+      newItems[existingIndex] = {
+        ...newItems[existingIndex],
+        qty: newItems[existingIndex].qty + Math.max(1, item.qty)
+      };
+      return newItems;
     });
   };
 
-  const updateQty = (productId: string, qty: number) => {
+  const updateQty = (productId: string, variantId: string | undefined, qty: number) => {
     setItems((prev) =>
       prev
         .map((entry) =>
-          entry.productId === productId ? { ...entry, qty } : entry
+          (entry.productId === productId && entry.variantId === variantId)
+            ? { ...entry, qty }
+            : entry
         )
         .filter((entry) => entry.qty > 0)
     );
   };
 
-  const removeItem = (productId: string) => {
-    setItems((prev) => prev.filter((entry) => entry.productId !== productId));
+  const removeItem = (productId: string, variantId?: string) => {
+    setItems((prev) => prev.filter(
+      (entry) => !(entry.productId === productId && entry.variantId === variantId)
+    ));
   };
 
   const clearCart = () => setItems([]);

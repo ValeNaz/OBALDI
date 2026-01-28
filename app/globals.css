@@ -81,7 +81,7 @@
   }
 
   .section-pad {
-    @apply py-16 md:py-24;
+    @apply py-8 md:py-16;
   }
 
   .card-pad {
@@ -136,6 +136,19 @@
 
   .shadow-glow-soft {
     box-shadow: 0 10px 30px var(--glow-navy);
+  }
+
+  /* Micro-interactions */
+  .hover-lift {
+    @apply transition-transform duration-300 ease-out hover:-translate-y-1 hover:shadow-lg;
+  }
+
+  .btn-press {
+    @apply active:scale-95 transition-transform duration-100;
+  }
+
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-glow-soft hover:-translate-y-1;
   }
 }
 

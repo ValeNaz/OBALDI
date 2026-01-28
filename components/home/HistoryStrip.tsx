@@ -14,14 +14,11 @@ type HistoryStripProps = {
 
 const HistoryStrip = ({ items, className }: HistoryStripProps) => {
   return (
-    <section className={cn("section-pad", className)}>
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <div>
-          <h2 className="text-2xl font-semibold text-[#0b224e]">Cronologia di navigazione</h2>
-          <p className="text-xs text-slate-400 mt-1">Pagina 1 di 3</p>
-        </div>
-        <Link href="/profile" className="text-sm font-semibold text-[#0b224e] hover:underline">
-          Visualizza o modifica
+    <section className={cn("py-0", className)}>
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+        <h2 className="text-xl font-display font-bold text-[#0b224e]">Visti di recente</h2>
+        <Link href="/profile" className="text-xs font-semibold text-slate-500 hover:text-[#0b224e] transition-colors">
+          Vedi tutti
         </Link>
       </div>
 
@@ -30,15 +27,15 @@ const HistoryStrip = ({ items, className }: HistoryStripProps) => {
           <Link
             key={item.id}
             href={`/product/${item.id.replace('history-', '')}`}
-            className="glass-panel w-24 h-24 overflow-hidden flex items-center justify-center group flex-shrink-0"
+            className="group relative flex-shrink-0 w-32 h-32 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden hover:shadow-md hover:border-[#0b224e]/20 transition-all duration-300"
           >
             <Image
               src={item.image}
               alt={item.title}
-              width={96}
-              height={96}
-              className="object-cover transition-transform duration-500 group-hover:scale-110"
+              fill
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
             />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
           </Link>
         ))}
       </HorizontalScroller>

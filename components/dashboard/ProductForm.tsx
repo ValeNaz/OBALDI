@@ -32,9 +32,10 @@ type ProductFormProps = {
     error?: string | null;
     userId?: string; // To scope image uploads if needed directly here or parent handles it
     role: "ADMIN" | "SELLER";
+    hideImages?: boolean;
 };
 
-const ProductForm = ({ initialData, onSubmit, onCancel, isSubmitting = false, error, role }: ProductFormProps) => {
+const ProductForm = ({ initialData, onSubmit, onCancel, isSubmitting = false, error, role, hideImages = false }: ProductFormProps) => {
     const [form, setForm] = useState<ProductData>({
         title: "",
         description: "",

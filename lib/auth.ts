@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextRequest } from "next/server";
 import { prisma } from "@/src/core/db";
-import { SESSION_COOKIE_NAME } from "@/src/core/auth/session";
+import { SESSION_COOKIE_NAME, getSessionByToken } from "@/src/core/auth/session";
 
 type AuthResult = {
     user: {
@@ -20,22 +20,7 @@ export async function verifyAuth(req: NextRequest): Promise<AuthResult> {
             return { user: null };
         }
 
-        const session = await prisma.session.findFirst({
-            where: {
-                tokenHash: token,
-                expiresAt: { gt: new Date() },
-            },
-            include: {
-                user: {
-                    select: {
-                        id: true,
-                        email: true,
-                        role: true,
-                        isDisabled: true,
-                    },
-                },
-            },
-        });
+        const session = await getSessionByToken(token);
 
         if (!session || session.user.isDisabled) {
             return { user: null };
@@ -45,7 +30,7 @@ export async function verifyAuth(req: NextRequest): Promise<AuthResult> {
             user: {
                 id: session.user.id,
                 email: session.user.email,
-                role: session.user.role,
+                role: session.user.role as "MEMBER" | "SELLER" | "ADMIN",
             },
         };
     } catch (error) {

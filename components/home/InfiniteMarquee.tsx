@@ -60,9 +60,15 @@ const InfiniteMarquee = ({ items, isLoading = false }: InfiniteMarqueeProps) => 
                                 <div className="absolute inset-0 bg-gradient-to-t from-[#0b224e]/90 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
 
                                 <div className="absolute bottom-0 left-0 right-0 p-8 text-white translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
-                                    <span className="inline-block px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-widest mb-3">
-                                        Premium Quality
-                                    </span>
+                                    {product.pointsEligible && product.pointsPrice ? (
+                                        <span className="inline-block px-3 py-1 bg-[#a41f2e]/90 text-white backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-widest mb-3">
+                                            Usa fino a {product.pointsPrice} punti
+                                        </span>
+                                    ) : product.premiumOnly ? (
+                                        <span className="inline-block px-3 py-1 bg-[#0b224e]/90 text-white backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-widest mb-3">
+                                            Premium Only
+                                        </span>
+                                    ) : null}
                                     <h3 className="text-xl font-bold mb-1 drop-shadow-md">
                                         {product.title}
                                     </h3>

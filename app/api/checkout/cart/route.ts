@@ -21,6 +21,7 @@ const schema = z.object({
     .array(
       z.object({
         productId: z.string().uuid(),
+        variantId: z.string().uuid().optional(),
         qty: z.number().int().min(1).max(10)
       })
     )
@@ -103,15 +104,20 @@ export async function POST(request: Request) {
     );
   }
 
+  // Key is productId:variantId (variantId can be empty string)
   const itemMap = new Map<string, number>();
   for (const item of parsed.data.items) {
-    itemMap.set(item.productId, (itemMap.get(item.productId) ?? 0) + item.qty);
+    const key = `${item.productId}:${item.variantId || ""}`;
+    itemMap.set(key, (itemMap.get(key) ?? 0) + item.qty);
   }
 
-  const productIds = Array.from(itemMap.keys());
-  const products = await prisma.product.findMany({
-    where: { id: { in: productIds } }
-  });
+  const productIds = Array.from(new Set(parsed.data.items.map(i => i.productId)));
+  const variantIds = Array.from(new Set(parsed.data.items.filter(i => i.variantId).map(i => i.variantId!)));
+
+  const [products, variants] = await Promise.all([
+    prisma.product.findMany({ where: { id: { in: productIds } } }),
+    prisma.productVariant.findMany({ where: { id: { in: variantIds } } })
+  ]);
 
   if (products.length !== productIds.length) {
     return NextResponse.json(
@@ -137,38 +143,37 @@ export async function POST(request: Request) {
   let totalCents = 0;
   let pointsCap = 0;
 
-  for (const product of products) {
-    const qty = itemMap.get(product.id) ?? 0;
-    if (qty <= 0) continue;
+  for (const item of parsed.data.items) {
+    const product = products.find((p: any) => p.id === item.productId)!;
+    const variant = item.variantId ? variants.find((v: any) => v.id === item.variantId) : null;
+    const qty = item.qty;
+
+    if (item.variantId && !variant) {
+      return NextResponse.json({ error: { code: "VARIANT_NOT_FOUND", message: "Variant not found." } }, { status: 404 });
+    }
 
     if (product.status !== "APPROVED") {
-      return NextResponse.json(
-        { error: { code: "PRODUCT_NOT_AVAILABLE", message: "Product not available." } },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: { code: "PRODUCT_NOT_AVAILABLE", message: "Product not available." } }, { status: 404 });
     }
 
-    if (product.isOutOfStock) {
-      return NextResponse.json(
-        { error: { code: "OUT_OF_STOCK", message: "Product out of stock." } },
-        { status: 400 }
-      );
-    }
-
-    // Inventory Check
-    if (product.trackInventory && product.stockQty < qty) {
-      return NextResponse.json(
-        { error: { code: "INSUFFICIENT_STOCK", message: `Not enough stock for ${product.title}.` } },
-        { status: 400 }
-      );
+    // Check inventory
+    if (product.trackInventory) {
+      if (variant) {
+        if (variant.stockQty < qty) {
+          return NextResponse.json({ error: { code: "INSUFFICIENT_STOCK", message: `Not enough stock for ${product.title} (${variant.title}).` } }, { status: 400 });
+        }
+      } else if (product.stockQty < qty) {
+        return NextResponse.json({ error: { code: "INSUFFICIENT_STOCK", message: `Not enough stock for ${product.title}.` } }, { status: 400 });
+      }
     }
 
     if (product.premiumOnly && membership.plan.code !== "TUTELA") {
-      return NextResponse.json(
-        { error: { code: "PREMIUM_ONLY", message: "Premium membership required." } },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: { code: "PREMIUM_ONLY", message: "Premium membership required." } }, { status: 403 });
     }
+
+    // Price can be overridden by variant
+    const unitPrice = variant?.priceCents ?? product.priceCents;
+    totalCents += unitPrice * qty;
 
     if (product.currency !== currency) {
       return NextResponse.json(
@@ -177,9 +182,8 @@ export async function POST(request: Request) {
       );
     }
 
-    totalCents += product.priceCents * qty;
     if (product.pointsEligible && product.pointsPrice) {
-      const maxByPrice = Math.floor(product.priceCents / 100);
+      const maxByPrice = Math.floor(unitPrice / 100);
       const maxByProduct = product.pointsPrice;
       const perUnit = Math.min(maxByPrice, maxByProduct);
       pointsCap += perUnit * qty;
@@ -196,13 +200,9 @@ export async function POST(request: Request) {
     });
 
     if (!coupon || !coupon.isActive) {
-      return NextResponse.json(
-        { error: { code: "INVALID_COUPON", message: "Invalid or inactive coupon." } },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: { code: "INVALID_COUPON", message: "Invalid or inactive coupon." } }, { status: 400 });
     }
 
-    // Validate coupon constraints
     const now = new Date();
     if (coupon.validFrom && now < coupon.validFrom) {
       return NextResponse.json({ error: { code: "COUPON_NOT_STARTED", message: "Coupon not yet valid." } }, { status: 400 });
@@ -224,13 +224,8 @@ export async function POST(request: Request) {
       discountCents = coupon.value;
     }
 
-    if (coupon.maxDiscountCents && discountCents > coupon.maxDiscountCents) {
-      discountCents = coupon.maxDiscountCents;
-    }
-
-    if (discountCents > totalCents) {
-      discountCents = totalCents;
-    }
+    if (coupon.maxDiscountCents && discountCents > coupon.maxDiscountCents) discountCents = coupon.maxDiscountCents;
+    if (discountCents > totalCents) discountCents = totalCents;
   }
 
   let order;
@@ -240,27 +235,16 @@ export async function POST(request: Request) {
   try {
     const result = await prisma.$transaction(
       async (tx) => {
-        const availablePoints = parsed.data.usePoints
-          ? await getAvailablePoints(tx, session.user.id)
-          : 0;
-        const appliedPoints = parsed.data.usePoints
-          ? Math.min(pointsCap, availablePoints)
-          : 0;
-        // Apply discount first, then points
+        const availablePoints = parsed.data.usePoints ? await getAvailablePoints(tx, session.user.id) : 0;
+        const appliedPoints = parsed.data.usePoints ? Math.min(pointsCap, availablePoints) : 0;
         const afterDiscount = totalCents - discountCents;
         const finalRemaining = afterDiscount - appliedPoints * 100;
-
-        // Ensure not negative
         const toPay = Math.max(0, finalRemaining);
 
         const createdOrder = await tx.order.create({
           data: {
             userId: session.user.id,
             status: toPay <= 0 ? "PAID" : "CREATED",
-            totalCents: afterDiscount, // Store the post-discount total as the effective order total? Or keep original? Usually total is final amount. Let's store total to pay.
-            // Actually, usually totalCents is the sum of items, and we have a discount field.
-            // But for simplicity let's stick to the schema: totalCents is what user owes?
-            // Let's keep totalCents as the GROSS total, and we have discountCents.
             totalCents: totalCents,
             discountCents: discountCents,
             couponId: coupon?.id,
@@ -271,31 +255,44 @@ export async function POST(request: Request) {
             provider: "STRIPE",
             shippingAddressId: parsed.data.shippingAddressId,
             items: {
-              create: products.map((product) => ({
-                productId: product.id,
-                qty: itemMap.get(product.id) ?? 1,
-                unitPriceCents: product.priceCents,
-                unitPoints: product.pointsPrice ?? null
-              }))
+              create: parsed.data.items.map((item) => {
+                const product = products.find(p => p.id === item.productId)!;
+                const variant = item.variantId ? variants.find(v => v.id === item.variantId) : null;
+                return {
+                  productId: item.productId,
+                  variantId: item.variantId || null,
+                  qty: item.qty,
+                  unitPriceCents: variant?.priceCents ?? product.priceCents,
+                  unitPoints: product.pointsPrice ?? null
+                };
+              })
             }
           }
         });
 
-        // Decrement Inventory & Record Movement
-        for (const product of products) {
+        // Decrement Inventory
+        for (const item of parsed.data.items) {
+          const product = products.find(p => p.id === item.productId)!;
           if (product.trackInventory) {
-            const qty = itemMap.get(product.id) ?? 1;
-            await tx.product.update({
-              where: { id: product.id },
-              data: {
-                stockQty: { decrement: qty },
-                isOutOfStock: product.stockQty - qty <= 0 // Simplified check, ideally re-check
-              }
-            });
+            if (item.variantId) {
+              await tx.productVariant.update({
+                where: { id: item.variantId },
+                data: { stockQty: { decrement: item.qty } }
+              });
+            } else {
+              await tx.product.update({
+                where: { id: item.productId },
+                data: {
+                  stockQty: { decrement: item.qty },
+                  isOutOfStock: product.stockQty - item.qty <= 0
+                }
+              });
+            }
             await tx.inventoryMovement.create({
               data: {
-                productId: product.id,
-                delta: -qty,
+                productId: item.productId,
+                variantId: item.variantId || null,
+                delta: -item.qty,
                 reason: InventoryReason.ORDER,
                 orderId: createdOrder.id
               }

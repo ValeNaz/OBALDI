@@ -246,7 +246,7 @@ const Header = () => {
                     Ordini
                   </Link>
                   <Link
-                    href="/profile"
+                    href="/profile#wishlist"
                     className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-600 hover:text-[#0b224e] transition-colors"
                   >
                     Preferiti

@@ -16,7 +16,9 @@ export async function GET(request: Request, { params }: Params) {
     const product = await prisma.product.findUnique({
       where: { id: params.id },
       include: {
-        media: { orderBy: { sortOrder: "asc" } }
+        media: { orderBy: { sortOrder: "asc" } },
+        variants: { orderBy: { createdAt: "asc" } },
+        options: { orderBy: { position: "asc" } }
       }
     });
 

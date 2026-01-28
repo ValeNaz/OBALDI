@@ -12,6 +12,9 @@ type OrderItem = {
     id: string;
     title: string;
   };
+  variant: {
+    title: string;
+  } | null;
 };
 
 type Order = {
@@ -105,6 +108,11 @@ export default function OrdersPage() {
                   <Link href={`/product/${item.product.id}`} className="font-semibold text-[#0b224e]">
                     {item.product.title}
                   </Link>
+                  {item.variant && (
+                    <div className="text-xs text-slate-500 font-medium">
+                      {item.variant.title}
+                    </div>
+                  )}
                   <div className="text-slate-500">x{item.qty}</div>
                   <div className="text-slate-700">
                     €{(item.unitPriceCents / 100).toFixed(2)}

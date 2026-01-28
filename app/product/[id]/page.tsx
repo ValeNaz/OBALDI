@@ -19,6 +19,12 @@ export default async function ProductPage({ params }: PageProps) {
           type: true,
           sortOrder: true
         }
+      },
+      variants: {
+        orderBy: { createdAt: "asc" }
+      },
+      options: {
+        orderBy: { position: "asc" }
       }
     }
   });
@@ -82,7 +88,9 @@ export default async function ProductPage({ params }: PageProps) {
           media: product.media,
           stockQty: product.stockQty,
           trackInventory: product.trackInventory,
-          isOutOfStock: product.isOutOfStock
+          isOutOfStock: product.isOutOfStock,
+          variants: product.variants,
+          options: product.options
         }}
       />
     </>

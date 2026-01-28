@@ -43,6 +43,8 @@ const Marketplace = () => {
   const [maxPrice, setMaxPrice] = useState("");
   const [sort, setSort] = useState("date-desc");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [availableOptions, setAvailableOptions] = useState<Record<string, string[]>>({});
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string[]>>({});
 
   // Data State
   const [heroData, setHeroData] = useState<HeroSlide[]>([]);
@@ -59,6 +61,13 @@ const Marketplace = () => {
   const [activeCategory, setActiveCategory] = useState<string>(searchParams.get("cat") || "ALL");
 
   useEffect(() => {
+    fetch("/api/marketplace/facets")
+      .then(res => res.json())
+      .then(data => setAvailableOptions(data.facets || {}))
+      .catch(() => { });
+  }, []);
+
+  useEffect(() => {
     const cat = searchParams.get("cat");
     setActiveCategory(cat || "ALL");
     if (cat && cat !== "ALL") setShowFullCatalog(true);
@@ -71,6 +80,23 @@ const Marketplace = () => {
     { id: "ALL", label: "Tutte" },
     ...baseCategories
   ];
+
+  const handleOptionChange = (name: string, value: string) => {
+    setSelectedOptions(prev => {
+      const current = prev[name] || [];
+      const isSelected = current.includes(value);
+      const updated = isSelected
+        ? current.filter(v => v !== value)
+        : [...current, value];
+
+      if (updated.length === 0) {
+        const { [name]: _, ...rest } = prev;
+        return rest;
+      }
+      return { ...prev, [name]: updated };
+    });
+    setShowFullCatalog(true);
+  };
 
   const handleCategoryChange = (catId: string) => {
     setActiveCategory(catId);
@@ -142,7 +168,21 @@ const Marketplace = () => {
     try {
       const minCents = minPrice ? parseFloat(minPrice) * 100 : "";
       const maxCents = maxPrice ? parseFloat(maxPrice) * 100 : "";
-      const url = `/api/products?q=${encodeURIComponent(query)}&category=${activeCategory === "ALL" ? "" : activeCategory}&minPrice=${minCents}&maxPrice=${maxCents}&sort=${sort}`;
+
+      const optParams = Object.entries(selectedOptions)
+        .flatMap(([key, vals]) => vals.map(v => `opt_${key}=${encodeURIComponent(v)}`))
+        .join("&");
+
+      const queryParams = [
+        `q=${encodeURIComponent(query)}`,
+        `category=${activeCategory === "ALL" ? "" : activeCategory}`,
+        `minPrice=${minCents}`,
+        `maxPrice=${maxCents}`,
+        `sort=${sort}`,
+        optParams
+      ].filter(Boolean).join("&");
+
+      const url = `/api/products?${queryParams}`;
       const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
@@ -172,13 +212,7 @@ const Marketplace = () => {
     } else {
       loadFullCatalog();
     }
-  }, [user?.id, activeCategory, query, showFullCatalog, minPrice, maxPrice, sort]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    setOrderSuccess(params.get("order_success") === "1");
-  }, []);
+  }, [user?.id, activeCategory, query, showFullCatalog, minPrice, maxPrice, sort, selectedOptions]);
 
   const handleAddToCart = (product: Product) => {
     addItem({
@@ -202,13 +236,14 @@ const Marketplace = () => {
     setMaxPrice("");
     setSort("date-desc");
     setActiveCategory("ALL");
+    setSelectedOptions({});
     router.push(pathname, { scroll: false });
   };
 
   const isHomeView = !query && activeCategory === "ALL" && !showFullCatalog;
 
   return (
-    <div className="container-max page-pad pt-36 md:pt-40 pb-12 min-h-screen">
+    <div className="container-max page-pad pt-28 md:pt-32 pb-8 min-h-screen">
       {orderSuccess && (
         <div className="mb-8 text-sm text-green-700 font-semibold bg-green-50 border border-green-100 rounded-xl px-4 py-3">
           Pagamento completato! Ti aggiorneremo sullo stato dell&apos;ordine.
@@ -216,47 +251,11 @@ const Marketplace = () => {
       )}
 
       {isHomeView ? (
-        <div className="animate-fade-in-soft flex flex-col gap-4 md:gap-5">
+        <div className="animate-fade-in-soft flex flex-col gap-3 md:gap-4">
           {/* Hero Carousel */}
           <section className="bg-white rounded-2xl shadow-sm overflow-hidden">
             <HeroCarousel slides={heroData} className="py-4 md:py-5" />
           </section>
-
-          {/* Promo Modules */}
-          {promoData.length > 0 && (
-            <section className="bg-white rounded-2xl p-4 md:p-5 shadow-sm">
-              <h2 className="text-lg font-display font-bold text-[#0b224e] mb-4">Consigliati per te</h2>
-              <PromoModuleGrid modules={promoData} />
-            </section>
-          )}
-
-          {/* Split Modules */}
-          {splitData.featured && (
-            <section className="bg-gradient-to-br from-slate-50 to-white rounded-2xl p-4 md:p-5 shadow-sm border border-slate-100">
-              <SplitModulesRow featured={splitData.featured} side={splitData.side} />
-            </section>
-          )}
-
-          {/* Product Carousels */}
-          {carouselSectionsData.length > 0 && (
-            <section className="bg-white rounded-2xl p-4 md:p-5 shadow-sm">
-              <div className="flex flex-col gap-5">
-                {carouselSectionsData.map((section) => (
-                  <ProductCarouselSection key={section.id} section={section} />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Collection Modules */}
-          {collectionModulesData.length > 0 && (
-            <section className="bg-gradient-to-br from-[#0b224e] to-[#1a3a6e] rounded-2xl p-4 md:p-5 shadow-lg">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-display font-bold text-white">Collezioni in evidenza</h2>
-              </div>
-              <PromoModuleGrid modules={collectionModulesData} />
-            </section>
-          )}
 
           {/* Catalog Preview as Marquee */}
           <section className="bg-white rounded-2xl p-4 md:p-5 shadow-sm" id="catalogo">
@@ -274,6 +273,42 @@ const Marketplace = () => {
             </div>
             <InfiniteMarquee items={catalogItems} isLoading={pageLoading} />
           </section>
+
+          {/* Promo Modules */}
+          {promoData.length > 0 && (
+            <section className="bg-white rounded-2xl p-4 md:p-5 shadow-sm">
+              <h2 className="text-lg font-display font-bold text-[#0b224e] mb-4">Consigliati per te</h2>
+              <PromoModuleGrid modules={promoData} />
+            </section>
+          )}
+
+          {/* Split Modules */}
+          {splitData.featured && (
+            <SplitModulesRow featured={splitData.featured} side={splitData.side} />
+          )}
+
+          {/* Product Carousels */}
+          {carouselSectionsData.length > 0 && (
+            <section className="bg-white rounded-2xl p-4 md:p-5 shadow-sm">
+              <div className="flex flex-col gap-4">
+                {carouselSectionsData.map((section) => (
+                  <ProductCarouselSection key={section.id} section={section} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Collection Modules */}
+          {collectionModulesData.length > 0 && (
+            <section className="bg-gradient-to-br from-[#0b224e] to-[#1a3a6e] rounded-2xl p-4 md:p-5 shadow-lg">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-display font-bold text-white">Collezioni in evidenza</h2>
+              </div>
+              <PromoModuleGrid modules={collectionModulesData} />
+            </section>
+          )}
+
+
         </div>
       ) : (
         /* Full Catalog Mode */
@@ -313,6 +348,9 @@ const Marketplace = () => {
                   sort={sort}
                   onSortChange={(s) => { setSort(s); setShowMobileFilters(false); }}
                   onResetFilters={() => { handleResetFilters(); setShowMobileFilters(false); }}
+                  options={availableOptions}
+                  selectedOptions={selectedOptions}
+                  onOptionChange={handleOptionChange}
                 />
               </div>
             </div>
@@ -402,8 +440,8 @@ const Marketplace = () => {
       )}
 
       {historyItemsData.length > 0 && (
-        <section className="mt-20">
-          <HistoryStrip items={historyItemsData} className="py-4 md:py-6" />
+        <section className="mt-4">
+          <HistoryStrip items={historyItemsData} className="p-4 md:p-5 bg-white rounded-2xl shadow-sm" />
         </section>
       )}
     </div>

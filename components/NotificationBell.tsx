@@ -17,7 +17,7 @@ type Notification = {
 };
 
 const NotificationBell = () => {
-    const { user } = useUser();
+    const { user, refresh } = useUser();
     const [isOpen, setIsOpen] = useState(false);
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
@@ -44,15 +44,26 @@ const NotificationBell = () => {
     }, [user]);
 
     const fetchNotifications = async () => {
+        if (!user) return;
         try {
-            const res = await fetch("/api/notifications");
+            const res = await fetch("/api/notifications", {
+                cache: "no-store",
+                credentials: "include"
+            });
+
+            if (res.status === 401) {
+                // Session likely expired, sync state
+                await refresh();
+                return;
+            }
+
             if (res.ok) {
                 const data = await res.json();
                 setNotifications(data.notifications ?? []);
                 setUnreadCount(data.unreadCount ?? 0);
             }
         } catch (error) {
-            console.error("Failed to fetch notifications:", error);
+            // Silently ignore network errors during polling
         }
     };
 

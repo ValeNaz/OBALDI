@@ -44,6 +44,9 @@ export const metadata: Metadata = {
     title: "Obaldi",
     description: "Consapevolezza. Tutela. Acquisti sensati.",
     images: ["/media/logo_Obaldi.png"]
+  },
+  icons: {
+    icon: "/media/logo_Obaldi.png"
   }
 };
 
@@ -57,8 +60,8 @@ export default function RootLayout({
     process.env.NEXT_PUBLIC_PLAUSIBLE_SRC ?? "https://plausible.io/js/script.js";
 
   return (
-    <html lang="it">
-      <body className={`${sora.variable} ${manrope.variable} font-body`}>
+    <html lang="it" suppressHydrationWarning>
+      <body className={`${sora.variable} ${manrope.variable} font-body`} suppressHydrationWarning>
         <UserProvider>
           <CartProvider>
             <div className="min-h-screen flex flex-col">

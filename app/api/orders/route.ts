@@ -22,7 +22,8 @@ export async function GET() {
     include: {
       items: {
         include: {
-          product: true
+          product: true,
+          variant: true
         }
       }
     }
@@ -44,7 +45,10 @@ export async function GET() {
         product: {
           id: item.product.id,
           title: item.product.title
-        }
+        },
+        variant: item.variant ? {
+          title: item.variant.title
+        } : null
       }))
     }))
   });

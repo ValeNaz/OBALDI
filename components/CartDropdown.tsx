@@ -112,7 +112,7 @@ const CartDropdown = ({ buttonClassName = "" }: CartDropdownProps) => {
           <>
             <div className="max-h-64 space-y-3 overflow-auto pr-1">
               {items.map((item) => (
-                <div key={item.productId} className="flex gap-3">
+                <div key={`${item.productId}-${item.variantId || 'base'}`} className="flex gap-3">
                   <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-white/60 bg-white">
                     <Image src={item.image} alt={item.title} fill sizes="48px" className="object-cover" />
                   </div>
@@ -130,7 +130,7 @@ const CartDropdown = ({ buttonClassName = "" }: CartDropdownProps) => {
                   <div className="flex flex-col items-end gap-2">
                     <button
                       type="button"
-                      onClick={() => removeItem(item.productId)}
+                      onClick={() => removeItem(item.productId, item.variantId)}
                       className="text-[10px] font-semibold text-slate-400 hover:text-[#a41f2e]"
                       aria-label={`Rimuovi ${item.title}`}
                     >
@@ -139,7 +139,7 @@ const CartDropdown = ({ buttonClassName = "" }: CartDropdownProps) => {
                     <div className="flex items-center gap-1 rounded-full bg-white/70 px-2 py-1">
                       <button
                         type="button"
-                        onClick={() => updateQty(item.productId, Math.max(1, item.qty - 1))}
+                        onClick={() => updateQty(item.productId, item.variantId, Math.max(1, item.qty - 1))}
                         className="h-5 w-5 rounded-full bg-white text-[10px] font-bold text-slate-600"
                         aria-label="Riduci quantita"
                       >
@@ -148,7 +148,7 @@ const CartDropdown = ({ buttonClassName = "" }: CartDropdownProps) => {
                       <span className="text-[11px] font-semibold text-slate-700">{item.qty}</span>
                       <button
                         type="button"
-                        onClick={() => updateQty(item.productId, item.qty + 1)}
+                        onClick={() => updateQty(item.productId, item.variantId, item.qty + 1)}
                         className="h-5 w-5 rounded-full bg-white text-[10px] font-bold text-slate-600"
                         aria-label="Aumenta quantita"
                       >

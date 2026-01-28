@@ -9,6 +9,16 @@ export async function GET(request: Request) {
   const maxPrice = url.searchParams.get("maxPrice") ? parseInt(url.searchParams.get("maxPrice")!) : null;
   const sort = url.searchParams.get("sort") || "date-desc";
 
+  // Parse option filters (opt_Color=Red)
+  const optionFilters: Record<string, string[]> = {};
+  url.searchParams.forEach((value, key) => {
+    if (key.startsWith("opt_")) {
+      const optName = key.replace("opt_", "");
+      if (!optionFilters[optName]) optionFilters[optName] = [];
+      optionFilters[optName].push(value);
+    }
+  });
+
   let orderBy: any = { createdAt: "desc" };
   if (sort === "price-asc") orderBy = { priceCents: "asc" };
   else if (sort === "price-desc") orderBy = { priceCents: "desc" };
@@ -31,6 +41,20 @@ export async function GET(request: Request) {
           ...(minPrice !== null ? { gte: minPrice } : {}),
           ...(maxPrice !== null ? { lte: maxPrice } : {})
         }
+      } : {}),
+      ...(Object.keys(optionFilters).length > 0 ? {
+        AND: Object.entries(optionFilters).map(([name, values]) => ({
+          variants: {
+            some: {
+              OR: values.map(val => ({
+                attributesJson: {
+                  path: [name],
+                  equals: val
+                }
+              }))
+            }
+          }
+        }))
       } : {})
     },
     orderBy,

@@ -100,7 +100,11 @@ const CheckoutPage = () => {
           usePoints: user.isPremium && usePoints,
           shippingAddressId: selectedAddressId,
           couponCode: couponCode,
-          items: items.map((item) => ({ productId: item.productId, qty: item.qty }))
+          items: items.map((item) => ({
+            productId: item.productId,
+            qty: item.qty,
+            variantId: item.variantId
+          }))
         })
       });
 
@@ -168,7 +172,7 @@ const CheckoutPage = () => {
 
             {/* Cart Items */}
             {items.map((item) => (
-              <div key={item.productId} className="glass-panel p-6 flex flex-col md:flex-row gap-6">
+              <div key={`${item.productId}-${item.variantId || 'base'}`} className="glass-panel p-6 flex flex-col md:flex-row gap-6">
                 <div className="relative w-full md:w-40 aspect-[4/3] rounded-2xl overflow-hidden bg-slate-100">
                   <Image src={item.image} alt={item.title} fill sizes="200px" className="object-cover" />
                 </div>
@@ -187,7 +191,7 @@ const CheckoutPage = () => {
                     </div>
                     <button
                       type="button"
-                      onClick={() => removeItem(item.productId)}
+                      onClick={() => removeItem(item.productId, item.variantId)}
                       className="text-xs font-semibold text-slate-400 hover:text-[#a41f2e]"
                     >
                       Rimuovi
@@ -197,7 +201,7 @@ const CheckoutPage = () => {
                     <div className="flex items-center gap-2 rounded-full bg-white/70 px-3 py-1">
                       <button
                         type="button"
-                        onClick={() => updateQty(item.productId, Math.max(1, item.qty - 1))}
+                        onClick={() => updateQty(item.productId, item.variantId, Math.max(1, item.qty - 1))}
                         className="h-7 w-7 rounded-full bg-white text-slate-700"
                         aria-label="Riduci quantita"
                       >
@@ -206,7 +210,7 @@ const CheckoutPage = () => {
                       <span className="text-sm font-semibold text-slate-700">{item.qty}</span>
                       <button
                         type="button"
-                        onClick={() => updateQty(item.productId, item.qty + 1)}
+                        onClick={() => updateQty(item.productId, item.variantId, item.qty + 1)}
                         className="h-7 w-7 rounded-full bg-white text-slate-700"
                         aria-label="Aumenta quantita"
                       >

@@ -162,7 +162,7 @@ model User {
   productChangeRequests  ProductChangeRequest[]
   orders                 Order[]
   purchaseAssistRequests PurchaseAssistRequest[]
-  auditLogs              AuditLog[] @relation("AuditLogActor")
+  auditLogs              AuditLog[]              @relation("AuditLogActor")
   passwordResetTokens    PasswordResetToken[]
   notifications          Notification[]
   settings               UserSettings?
@@ -201,17 +201,17 @@ model PasswordResetToken {
 }
 
 model MembershipPlan {
-  id                   String            @id @default(uuid()) @db.Uuid
+  id                   String             @id @default(uuid()) @db.Uuid
   code                 MembershipPlanCode @unique
   priceCents           Int
-  currency             String            @default("EUR")
-  periodDays           Int               @default(28)
+  currency             String             @default("EUR")
+  periodDays           Int                @default(28)
   pointsPolicyType     PointsPolicyType
   pointsFixedAmount    Int?
-  pointsConversionRate Decimal?          @db.Decimal(10, 4)
-  isActive             Boolean           @default(true)
+  pointsConversionRate Decimal?           @db.Decimal(10, 4)
+  isActive             Boolean            @default(true)
 
-  memberships     Membership[]
+  memberships      Membership[]
   checkoutSessions CheckoutSession[]
 
   @@map("membership_plans")
@@ -230,7 +230,7 @@ model Membership {
   createdAt          DateTime         @default(now()) @db.Timestamptz(6)
   updatedAt          DateTime         @updatedAt @db.Timestamptz(6)
 
-  user User @relation(fields: [userId], references: [id])
+  user User           @relation(fields: [userId], references: [id])
   plan MembershipPlan @relation(fields: [planId], references: [id])
 
   @@index([status])
@@ -274,17 +274,17 @@ model PointsLedger {
 }
 
 model Product {
-  id             String        @id @default(uuid()) @db.Uuid
-  sellerId       String        @db.Uuid
+  id             String          @id @default(uuid()) @db.Uuid
+  sellerId       String          @db.Uuid
   title          String
   description    String
-  specsJson      Json          @db.JsonB
+  specsJson      Json            @db.JsonB
   priceCents     Int
-  currency       String        @default("EUR")
+  currency       String          @default("EUR")
   status         ProductStatus
-  isOutOfStock   Boolean       @default(false)
-  premiumOnly    Boolean       @default(false)
-  pointsEligible Boolean       @default(false)
+  isOutOfStock   Boolean         @default(false)
+  premiumOnly    Boolean         @default(false)
+  pointsEligible Boolean         @default(false)
   pointsPrice    Int?
   category       ProductCategory @default(OTHER)
   isFeatured     Boolean         @default(false)
@@ -294,35 +294,81 @@ model Product {
   isCarousel     Boolean         @default(false)
   isCollection   Boolean         @default(false)
   adminTag       String?
-  // Inventory tracking
-  stockQty       Int           @default(0)
-  lowStockAlert  Int           @default(5)
-  trackInventory Boolean       @default(true)
-  createdAt      DateTime      @default(now()) @db.Timestamptz(6)
-  updatedAt      DateTime      @updatedAt @db.Timestamptz(6)
+  // Enhanced fields
+  slug           String?         @unique
+  brand          String?
+  weight         Int? // in grams
+  dimensionsJson Json?           @db.JsonB // { width, height, depth, unit }
+  seoTitle       String?
+  seoDescription String?
 
-  seller              User                   @relation(fields: [sellerId], references: [id])
-  media               ProductMedia[]
-  changeRequests      ProductChangeRequest[]
-  orderItems          OrderItem[]
-  inventoryMovements  InventoryMovement[]
-  reviews             Review[]
-  wishlistItems       WishlistItem[]
+  // Inventory tracking
+  stockQty       Int      @default(0)
+  lowStockAlert  Int      @default(5)
+  trackInventory Boolean  @default(true)
+  createdAt      DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @db.Timestamptz(6)
+
+  seller             User                   @relation(fields: [sellerId], references: [id])
+  media              ProductMedia[]
+  options            ProductOption[]
+  variants           ProductVariant[]
+  changeRequests     ProductChangeRequest[]
+  orderItems         OrderItem[]
+  inventoryMovements InventoryMovement[]
+  reviews            Review[]
+  wishlistItems      WishlistItem[]
 
   @@index([status])
   @@index([sellerId])
   @@index([title])
+  @@index([slug])
   @@map("products")
 }
 
+model ProductOption {
+  id        String   @id @default(uuid()) @db.Uuid
+  productId String   @db.Uuid
+  name      String // e.g. "Color", "Size"
+  values    String[] @db.Text // e.g. ["Red", "Blue"] or ["S", "M", "L"]
+  position  Int      @default(0)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@map("product_options")
+}
+
+model ProductVariant {
+  id                  String  @id @default(uuid()) @db.Uuid
+  productId           String  @db.Uuid
+  title               String // e.g. "Red / S"
+  sku                 String? @unique
+  priceCents          Int? // Override product price if set
+  compareAtPriceCents Int? // Original price (strikethrough)
+  stockQty            Int     @default(0)
+  attributesJson      Json    @db.JsonB // { "Color": "Red", "Size": "S" }
+  mediaIndex          Int? // Index of the image in product.media to show
+
+  product            Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderItems         OrderItem[]
+  inventoryMovements InventoryMovement[]
+
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+
+  @@index([productId])
+  @@map("product_variants")
+}
+
 model ProductMedia {
-  id        String           @id @default(uuid()) @db.Uuid
-  productId String           @db.Uuid
-  type      ProductMediaType
-  url       String
+  id          String           @id @default(uuid()) @db.Uuid
+  productId   String           @db.Uuid
+  type        ProductMediaType
+  url         String
   storagePath String?
-  sortOrder Int
-  createdAt DateTime         @default(now()) @db.Timestamptz(6)
+  sortOrder   Int
+  createdAt   DateTime         @default(now()) @db.Timestamptz(6)
 
   product Product @relation(fields: [productId], references: [id])
 
@@ -331,14 +377,14 @@ model ProductMedia {
 }
 
 model ProductChangeRequest {
-  id               String             @id @default(uuid()) @db.Uuid
-  productId        String             @db.Uuid
-  sellerId         String             @db.Uuid
-  proposedDataJson Json               @db.JsonB
+  id               String              @id @default(uuid()) @db.Uuid
+  productId        String              @db.Uuid
+  sellerId         String              @db.Uuid
+  proposedDataJson Json                @db.JsonB
   status           ChangeRequestStatus
   adminNote        String?
-  createdAt        DateTime           @default(now()) @db.Timestamptz(6)
-  updatedAt        DateTime           @updatedAt @db.Timestamptz(6)
+  createdAt        DateTime            @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime            @updatedAt @db.Timestamptz(6)
 
   product Product @relation(fields: [productId], references: [id])
   seller  User    @relation(fields: [sellerId], references: [id])
@@ -348,23 +394,23 @@ model ProductChangeRequest {
 }
 
 model Order {
-  id                  String        @id @default(uuid()) @db.Uuid
-  userId              String        @db.Uuid
-  status              OrderStatus
-  totalCents          Int
-  currency            String        @default("EUR")
-  paidWith            OrderPaidWith
-  pointsSpent         Int           @default(0)
-  shippingIncluded    Boolean       @default(true)
-  provider            Provider
-  providerPaymentId   String?
+  id                String        @id @default(uuid()) @db.Uuid
+  userId            String        @db.Uuid
+  status            OrderStatus
+  totalCents        Int
+  currency          String        @default("EUR")
+  paidWith          OrderPaidWith
+  pointsSpent       Int           @default(0)
+  shippingIncluded  Boolean       @default(true)
+  provider          Provider
+  providerPaymentId String?
   // Shipping address
-  shippingAddressId   String?       @db.Uuid
+  shippingAddressId String?       @db.Uuid
   // Coupon/discount
-  couponId            String?       @db.Uuid
-  discountCents       Int           @default(0)
-  createdAt           DateTime      @default(now()) @db.Timestamptz(6)
-  updatedAt           DateTime      @updatedAt @db.Timestamptz(6)
+  couponId          String?       @db.Uuid
+  discountCents     Int           @default(0)
+  createdAt         DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime      @updatedAt @db.Timestamptz(6)
 
   user            User        @relation(fields: [userId], references: [id])
   items           OrderItem[]
@@ -381,12 +427,14 @@ model OrderItem {
   id             String  @id @default(uuid()) @db.Uuid
   orderId        String  @db.Uuid
   productId      String  @db.Uuid
+  variantId      String? @db.Uuid
   qty            Int
   unitPriceCents Int
   unitPoints     Int?
 
-  order   Order   @relation(fields: [orderId], references: [id])
-  product Product @relation(fields: [productId], references: [id])
+  order   Order           @relation(fields: [orderId], references: [id])
+  product Product         @relation(fields: [productId], references: [id])
+  variant ProductVariant? @relation(fields: [variantId], references: [id])
 
   @@index([orderId])
   @@map("order_items")
@@ -410,14 +458,14 @@ model ContentPost {
 }
 
 model PurchaseAssistRequest {
-  id         String                @id @default(uuid()) @db.Uuid
-  userId     String                @db.Uuid
+  id         String               @id @default(uuid()) @db.Uuid
+  userId     String               @db.Uuid
   urlToCheck String
   notes      String?
   status     PurchaseAssistStatus
   outcome    String?
-  createdAt  DateTime              @default(now()) @db.Timestamptz(6)
-  updatedAt  DateTime              @updatedAt @db.Timestamptz(6)
+  createdAt  DateTime             @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime             @updatedAt @db.Timestamptz(6)
 
   user User @relation(fields: [userId], references: [id])
 
@@ -426,13 +474,13 @@ model PurchaseAssistRequest {
 }
 
 model AuditLog {
-  id          String   @id @default(uuid()) @db.Uuid
-  actorUserId String?  @db.Uuid
-  action      String
-  entity      String
-  entityId    String?  @db.Uuid
-  metadataJson Json    @db.JsonB
-  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  id           String   @id @default(uuid()) @db.Uuid
+  actorUserId  String?  @db.Uuid
+  action       String
+  entity       String
+  entityId     String?  @db.Uuid
+  metadataJson Json     @db.JsonB
+  createdAt    DateTime @default(now()) @db.Timestamptz(6)
 
   actorUser User? @relation("AuditLogActor", fields: [actorUserId], references: [id])
 
@@ -443,13 +491,13 @@ model AuditLog {
 }
 
 model WebhookEvent {
-  id         String    @id @default(uuid()) @db.Uuid
-  provider   Provider
-  eventId    String    @unique
-  type       String
-  payload    Json      @db.JsonB
+  id          String    @id @default(uuid()) @db.Uuid
+  provider    Provider
+  eventId     String    @unique
+  type        String
+  payload     Json      @db.JsonB
   processedAt DateTime? @db.Timestamptz(6)
-  createdAt  DateTime  @default(now()) @db.Timestamptz(6)
+  createdAt   DateTime  @default(now()) @db.Timestamptz(6)
 
   @@map("webhook_events")
 }
@@ -484,13 +532,13 @@ model Notification {
 }
 
 model UserSettings {
-  id                  String  @id @default(uuid()) @db.Uuid
-  userId              String  @unique @db.Uuid
-  notifyOrders        Boolean @default(true)
-  notifyPromotions    Boolean @default(true)
-  notifyNewsletter    Boolean @default(false)
-  darkMode            Boolean @default(false)
-  language            String  @default("it")
+  id               String  @id @default(uuid()) @db.Uuid
+  userId           String  @unique @db.Uuid
+  notifyOrders     Boolean @default(true)
+  notifyPromotions Boolean @default(true)
+  notifyNewsletter Boolean @default(false)
+  darkMode         Boolean @default(false)
+  language         String  @default("it")
 
   user User @relation(fields: [userId], references: [id])
 
@@ -513,20 +561,20 @@ model ProductView {
 // ========================================
 
 model Address {
-  id          String   @id @default(uuid()) @db.Uuid
-  userId      String   @db.Uuid
-  label       String?
-  fullName    String
-  line1       String
-  line2       String?
-  city        String
-  province    String
-  postalCode  String
-  country     String   @default("IT")
-  phone       String?
-  isDefault   Boolean  @default(false)
-  createdAt   DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime @updatedAt @db.Timestamptz(6)
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @db.Uuid
+  label      String?
+  fullName   String
+  line1      String
+  line2      String?
+  city       String
+  province   String
+  postalCode String
+  country    String   @default("IT")
+  phone      String?
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @db.Timestamptz(6)
 
   user   User    @relation(fields: [userId], references: [id])
   orders Order[]
@@ -536,17 +584,17 @@ model Address {
 }
 
 model Shipment {
-  id            String          @id @default(uuid()) @db.Uuid
-  orderId       String          @unique @db.Uuid
-  carrier       String?
-  trackingCode  String?
-  trackingUrl   String?
-  status        ShipmentStatus  @default(PENDING)
-  estimatedAt   DateTime?       @db.Timestamptz(6)
-  shippedAt     DateTime?       @db.Timestamptz(6)
-  deliveredAt   DateTime?       @db.Timestamptz(6)
-  createdAt     DateTime        @default(now()) @db.Timestamptz(6)
-  updatedAt     DateTime        @updatedAt @db.Timestamptz(6)
+  id           String         @id @default(uuid()) @db.Uuid
+  orderId      String         @unique @db.Uuid
+  carrier      String?
+  trackingCode String?
+  trackingUrl  String?
+  status       ShipmentStatus @default(PENDING)
+  estimatedAt  DateTime?      @db.Timestamptz(6)
+  shippedAt    DateTime?      @db.Timestamptz(6)
+  deliveredAt  DateTime?      @db.Timestamptz(6)
+  createdAt    DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime       @updatedAt @db.Timestamptz(6)
 
   order Order @relation(fields: [orderId], references: [id])
 
@@ -554,16 +602,16 @@ model Shipment {
 }
 
 model Review {
-  id          String   @id @default(uuid()) @db.Uuid
-  productId   String   @db.Uuid
-  userId      String   @db.Uuid
-  orderId     String   @db.Uuid
-  rating      Int      // 1-5
-  title       String?
-  body        String?
-  isVerified  Boolean  @default(true)
-  createdAt   DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime @updatedAt @db.Timestamptz(6)
+  id         String   @id @default(uuid()) @db.Uuid
+  productId  String   @db.Uuid
+  userId     String   @db.Uuid
+  orderId    String   @db.Uuid
+  rating     Int // 1-5
+  title      String?
+  body       String?
+  isVerified Boolean  @default(true)
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @db.Timestamptz(6)
 
   product Product @relation(fields: [productId], references: [id])
   user    User    @relation(fields: [userId], references: [id])
@@ -589,19 +637,19 @@ model WishlistItem {
 }
 
 model Coupon {
-  id               String      @id @default(uuid()) @db.Uuid
-  code             String      @unique
+  id               String     @id @default(uuid()) @db.Uuid
+  code             String     @unique
   type             CouponType
-  value            Int         // cents for FIXED_AMOUNT, percentage*100 for PERCENTAGE
+  value            Int // cents for FIXED_AMOUNT, percentage*100 for PERCENTAGE
   minOrderCents    Int?
   maxDiscountCents Int?
   maxUses          Int?
-  usedCount        Int         @default(0)
-  validFrom        DateTime?   @db.Timestamptz(6)
-  validUntil       DateTime?   @db.Timestamptz(6)
-  isActive         Boolean     @default(true)
-  createdAt        DateTime    @default(now()) @db.Timestamptz(6)
-  updatedAt        DateTime    @updatedAt @db.Timestamptz(6)
+  usedCount        Int        @default(0)
+  validFrom        DateTime?  @db.Timestamptz(6)
+  validUntil       DateTime?  @db.Timestamptz(6)
+  isActive         Boolean    @default(true)
+  createdAt        DateTime   @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime   @updatedAt @db.Timestamptz(6)
 
   usages CouponUsage[]
   orders Order[]
@@ -626,14 +674,17 @@ model CouponUsage {
 model InventoryMovement {
   id        String          @id @default(uuid()) @db.Uuid
   productId String          @db.Uuid
-  delta     Int             // positive = restock, negative = sold/adjustment
+  variantId String?         @db.Uuid
+  delta     Int // positive = restock, negative = sold/adjustment
   reason    InventoryReason
   orderId   String?         @db.Uuid
   note      String?
   createdAt DateTime        @default(now()) @db.Timestamptz(6)
 
-  product Product @relation(fields: [productId], references: [id])
+  product Product         @relation(fields: [productId], references: [id])
+  variant ProductVariant? @relation(fields: [variantId], references: [id])
 
   @@index([productId, createdAt])
+  @@index([variantId])
   @@map("inventory_movements")
 }

@@ -53,6 +53,41 @@ export default function ProfilePage() {
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [bio, setBio] = useState("");
+  const [wishlistItems, setWishlistItems] = useState<any[]>([]);
+  const [wishlistLoading, setWishlistLoading] = useState(true);
+
+  const fetchWishlist = async () => {
+    try {
+      const res = await fetch("/api/me/wishlist");
+      const data = await res.json();
+      setWishlistItems(data.items || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setWishlistLoading(false);
+    }
+  };
+
+  const handleRemoveFromWishlist = async (productId: string) => {
+    try {
+      setWishlistItems(prev => prev.filter(i => i.productId !== productId));
+      await fetch(`/api/me/wishlist?productId=${productId}`, { method: "DELETE" });
+    } catch {
+      fetchWishlist(); // Revert on error
+    }
+  };
+
+  useEffect(() => {
+    fetchWishlist();
+  }, []);
+
+  useEffect(() => {
+    if (window.location.hash === "#wishlist") {
+      setTimeout(() => {
+        document.getElementById("wishlist")?.scrollIntoView({ behavior: "smooth" });
+      }, 500);
+    }
+  }, [wishlistLoading]);
 
   useEffect(() => {
     const load = async () => {
@@ -485,6 +520,61 @@ export default function ProfilePage() {
                   Passa a Tutela →
                 </Link>
               </div>
+            </div>
+          )}
+        </div>
+        <div className="glass-card card-pad lg:col-span-3" id="wishlist">
+          <h2 className="text-xl font-bold text-[#0b224e] mb-4">Lista Desideri</h2>
+          {wishlistLoading ? (
+            <p className="text-sm text-slate-500">Caricamento preferiti...</p>
+          ) : wishlistItems.length === 0 ? (
+            <p className="text-sm text-slate-500">
+              Non hai ancora salvato nessun prodotto.{" "}
+              <Link href="/marketplace" className="text-[#0b224e] font-bold hover:underline">
+                Vai al Marketplace
+              </Link>
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {wishlistItems.map((item) => (
+                <div key={item.id} className="relative group bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition-all">
+                  <Link href={`/product/${item.product.id}`} className="block">
+                    <div className="aspect-[4/3] relative bg-slate-50">
+                      {item.product.image ? (
+                        <img
+                          src={item.product.image}
+                          alt={item.product.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-slate-300">
+                          No Image
+                        </div>
+                      )}
+                      {item.product.isOutOfStock && (
+                        <div className="absolute inset-0 bg-white/60 flex items-center justify-center backdrop-blur-[1px]">
+                          <span className="bg-slate-800 text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase">Esaurito</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-3">
+                      <h3 className="font-bold text-[#0b224e] text-sm truncate">{item.product.title}</h3>
+                      <p className="text-xs text-slate-500 mt-1 font-semibold">
+                        €{(item.product.priceCents / 100).toFixed(2)}
+                      </p>
+                    </div>
+                  </Link>
+                  <button
+                    onClick={() => handleRemoveFromWishlist(item.productId)}
+                    className="absolute top-2 right-2 p-1.5 bg-white/90 rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 transition shadow-sm opacity-0 group-hover:opacity-100"
+                    title="Rimuovi dai preferiti"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                      <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
             </div>
           )}
         </div>

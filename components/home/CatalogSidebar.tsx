@@ -13,6 +13,9 @@ type CatalogFiltersProps = {
     sort: string;
     onSortChange: (sort: string) => void;
     onResetFilters: () => void;
+    options: Record<string, string[]>;
+    selectedOptions: Record<string, string[]>;
+    onOptionChange: (name: string, value: string) => void;
 };
 
 const CatalogSidebar = ({
@@ -24,10 +27,13 @@ const CatalogSidebar = ({
     onPriceChange,
     sort,
     onSortChange,
-    onResetFilters
+    onResetFilters,
+    options = {},
+    selectedOptions = {},
+    onOptionChange
 }: CatalogFiltersProps) => {
     return (
-        <aside className="w-full lg:w-64 flex-shrink-0 space-y-8 animate-fade-in-soft">
+        <aside className="w-full flex-shrink-0 space-y-8 animate-fade-in-soft">
             <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-[#0b224e] uppercase tracking-wider">Filtri</h3>
                 <button
@@ -61,8 +67,8 @@ const CatalogSidebar = ({
                         <button
                             key={cat.id}
                             onClick={() => onCategoryChange(cat.id)}
-                            className={`text-left px-5 py-3 rounded-2xl text-sm font-semibold transition-all ${activeCategory === cat.id
-                                ? "bg-[#0b224e] text-white shadow-glow-soft translate-x-1"
+                            className={`text-left px-5 py-3 rounded-2xl text-sm font-semibold transition-all truncate w-full ${activeCategory === cat.id
+                                ? "bg-[#0b224e] text-white shadow-glow-soft"
                                 : "text-slate-600 hover:bg-white hover:text-[#0b224e]"
                                 }`}
                         >
@@ -81,7 +87,7 @@ const CatalogSidebar = ({
                         placeholder="Min"
                         value={minPrice}
                         onChange={(e) => onPriceChange(e.target.value, maxPrice)}
-                        className="w-full glass-input text-xs !py-2"
+                        className="w-full glass-input text-xs !py-2 min-w-0"
                     />
                     <span className="text-slate-400">—</span>
                     <input
@@ -89,16 +95,38 @@ const CatalogSidebar = ({
                         placeholder="Max"
                         value={maxPrice}
                         onChange={(e) => onPriceChange(minPrice, e.target.value)}
-                        className="w-full glass-input text-xs !py-2"
+                        className="w-full glass-input text-xs !py-2 min-w-0"
                     />
                 </div>
-                <button
-                    onClick={() => onPriceChange("", "")}
-                    className="mt-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:text-[#a41f2e] transition"
-                >
-                    Resetta prezzi
-                </button>
             </div>
+
+            {/* Dynamic Options */}
+            {options && Object.keys(options).length > 0 && (
+                <div className="space-y-6 pt-4 border-t border-slate-200/50">
+                    {Object.entries(options).map(([optName, values]) => (
+                        <div key={optName}>
+                            <h3 className="text-sm font-bold text-[#0b224e] uppercase tracking-wider mb-3">{optName}</h3>
+                            <div className="flex flex-wrap gap-2">
+                                {values.map(val => {
+                                    const isSelected = selectedOptions[optName]?.includes(val);
+                                    return (
+                                        <button
+                                            key={val}
+                                            onClick={() => onOptionChange(optName, val)}
+                                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${isSelected
+                                                ? "bg-[#0b224e] text-white border-[#0b224e] shadow-md"
+                                                : "bg-white text-slate-600 border-slate-200 hover:border-slate-400 hover:bg-slate-50"
+                                                }`}
+                                        >
+                                            {val}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
 
             <div className="pt-6 border-t border-slate-200/50">
                 <p className="text-[10px] text-slate-400 italic">

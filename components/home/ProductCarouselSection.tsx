@@ -13,8 +13,8 @@ type ProductCarouselSectionProps = {
 
 const ProductCarouselSection = ({ section, isLoading = false, className }: ProductCarouselSectionProps) => {
   return (
-    <section className={cn("py-8 md:py-16", className)}>
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+    <section className={cn("py-0", className)}>
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
         <div>
           <h2 className="text-2xl font-semibold text-[#0b224e]">{section.title}</h2>
           {section.pageLabel && (

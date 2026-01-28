@@ -6,7 +6,7 @@ import { AuthError, requireRole, requireSession } from "@/src/core/auth/guard";
 const schema = z.object({
   title: z.string().min(1),
   description: z.string().min(1),
-  specsJson: z.record(z.unknown()).optional().default({}),
+  specsJson: z.any().default({}),
   priceCents: z.number().int().min(0),
   currency: z.string().min(3).max(3).default("EUR"),
   premiumOnly: z.boolean().default(false),
@@ -44,6 +44,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
+  console.log("Seller Product POST Body:", JSON.stringify(body, null, 2));
+
   const parsed = schema.safeParse(body);
 
   if (!parsed.success) {
@@ -80,7 +82,7 @@ export async function POST(request: Request) {
       sellerId: session.user.id,
       title: parsed.data.title,
       description: parsed.data.description,
-      specsJson: parsed.data.specsJson as any,
+      specsJson: typeof parsed.data.specsJson === 'string' ? JSON.parse(parsed.data.specsJson || '{}') : parsed.data.specsJson,
       priceCents: parsed.data.priceCents,
       currency: parsed.data.currency,
       status: "DRAFT",
